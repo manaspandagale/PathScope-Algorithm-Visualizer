@@ -5,6 +5,8 @@ import { StepExplanation } from './StepExplanation';
 import { PseudocodeViewer } from './PseudocodeViewer';
 import { DataStructureViewer } from './DataStructureViewer';
 import { ResultSummary } from './ResultSummary';
+import { TabList } from '../UI/TabList';
+import { BookOpen, Code, Layers, CheckCircle2 } from 'lucide-react';
 
 interface InfoPanelProps {
   algorithm: AlgorithmType;
@@ -24,13 +26,13 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   const metadata = ALGORITHMS_METADATA[algorithm];
   const [activeTab, setActiveTab] = useState<TabType>('explanation');
 
-  const subtitle = algorithm === 'dijkstra' ? 'Weighted shortest path' : 'Unweighted shortest path';
+  const subtitle = algorithm === 'dijkstra' ? 'Greedy weighted path' : 'Level-order unweighted search';
 
-  const tabs: { id: TabType; label: string }[] = [
-    { id: 'explanation', label: 'Explanation' },
-    { id: 'pseudocode', label: 'Pseudocode' },
-    { id: 'data', label: 'Data' },
-    { id: 'result', label: 'Result' },
+  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: 'explanation', label: 'Explanation', icon: <BookOpen className="w-3.5 h-3.5" /> },
+    { id: 'pseudocode', label: 'Pseudocode', icon: <Code className="w-3.5 h-3.5" /> },
+    { id: 'data', label: 'Data', icon: <Layers className="w-3.5 h-3.5" /> },
+    { id: 'result', label: 'Result', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -41,7 +43,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
         color: 'var(--text-primary)',
       }}
     >
-      {/* Simplified Algorithm Header */}
+      {/* Algorithm Header */}
       <div
         className="px-5 py-4 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border)' }}
@@ -72,35 +74,16 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
         </span>
       </div>
 
-      {/* 4 Clean, Readable Tabs with Simple Underline */}
-      <div
-        className="px-4 border-b flex items-center gap-1 shrink-0"
-        style={{
-          backgroundColor: 'var(--background-secondary)',
-          borderColor: 'var(--border)',
-        }}
-      >
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex-1 py-2.5 text-center text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none border-b-2"
-              style={{
-                borderColor: isActive ? 'var(--primary-action)' : 'transparent',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-                fontWeight: isActive ? 600 : 500,
-              }}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Accessible TabList */}
+      <TabList
+        tabs={tabs}
+        activeTab={activeTab}
+        onChange={(id) => setActiveTab(id)}
+        ariaLabel="Inspector sections"
+      />
 
       {/* Tab Content Panel */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-5" id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {activeTab === 'explanation' && (
           <StepExplanation
             snapshot={snapshot}
@@ -127,3 +110,5 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
     </aside>
   );
 };
+
+export default InfoPanel;

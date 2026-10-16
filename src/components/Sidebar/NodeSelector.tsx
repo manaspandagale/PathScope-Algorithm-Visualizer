@@ -2,6 +2,7 @@ import React from 'react';
 import type { Node } from '@xyflow/react';
 import type { GraphNodeData } from '../../types/graph';
 import { ArrowLeftRight } from 'lucide-react';
+import { SelectField } from '../UI/SelectField';
 
 interface NodeSelectorProps {
   nodes: Node<GraphNodeData>[];
@@ -24,21 +25,27 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
     setTargetId(temp);
   };
 
+  const nodeOptions = nodes.map((node) => ({
+    value: node.id,
+    label: `Vertex ${node.data.label || node.id}`,
+  }));
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3
           className="text-xs font-semibold uppercase tracking-wider"
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: 'var(--text-muted)' }}
         >
-          Start and destination
+          Endpoints
         </h3>
         {nodes.length >= 2 && (
           <button
+            type="button"
             onClick={handleSwap}
             title="Swap start and destination"
             aria-label="Swap start and destination"
-            className="flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors px-2 py-1 rounded hover:bg-[var(--background-secondary)]"
+            className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer px-2 py-1 rounded transition-colors hover:bg-[var(--background-secondary)]"
             style={{ color: 'var(--primary-action)' }}
           >
             <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -47,78 +54,23 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
         )}
       </div>
 
-      <div className="space-y-2">
-        {/* Start vertex */}
-        <div>
-          <label
-            htmlFor="start-vertex-select"
-            className="block text-xs font-medium mb-1"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Start vertex
-          </label>
-          <select
-            id="start-vertex-select"
-            value={sourceId}
-            onChange={(e) => setSourceId(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
-            style={{
-              backgroundColor: 'var(--background)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {nodes.length === 0 && <option value="">No vertices</option>}
-            {nodes.map((node) => (
-              <option key={node.id} value={node.id}>
-                Vertex {node.data.label || node.id}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="space-y-2.5">
+        <SelectField
+          id="start-vertex-select"
+          label="Start vertex"
+          value={sourceId}
+          onChange={(e) => setSourceId(e.target.value)}
+          options={nodeOptions.length > 0 ? nodeOptions : [{ value: '', label: 'No vertices available' }]}
+        />
 
-        {/* Destination vertex */}
-        <div>
-          <label
-            htmlFor="destination-vertex-select"
-            className="block text-xs font-medium mb-1"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Destination
-          </label>
-          <select
-            id="destination-vertex-select"
-            value={targetId}
-            onChange={(e) => setTargetId(e.target.value)}
-            className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
-            style={{
-              backgroundColor: 'var(--background)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {nodes.length === 0 && <option value="">No vertices</option>}
-            {nodes.map((node) => (
-              <option key={node.id} value={node.id}>
-                Vertex {node.data.label || node.id}
-              </option>
-            ))}
-          </select>
-        </div>
+        <SelectField
+          id="destination-vertex-select"
+          label="Destination"
+          value={targetId}
+          onChange={(e) => setTargetId(e.target.value)}
+          options={nodeOptions.length > 0 ? nodeOptions : [{ value: '', label: 'No vertices available' }]}
+        />
       </div>
-
-      {sourceId && targetId && sourceId === targetId && (
-        <p
-          className="text-xs p-2 rounded border"
-          style={{
-            backgroundColor: 'var(--warning-subtle)',
-            borderColor: 'var(--warning)',
-            color: 'var(--warning)',
-          }}
-        >
-          Start and destination are the same vertex (path cost is 0).
-        </p>
-      )}
     </div>
   );
 };

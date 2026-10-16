@@ -10,40 +10,41 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
   const state = nodeData.state || 'default';
   const distance = nodeData.distance;
 
-  // Clean accessible states
+  // Strict educational state language
   let borderColor = 'var(--border-strong)';
-  let borderWidth = '1.5px';
+  let borderWidth = '2px';
   let borderStyle = 'solid';
   let backgroundColor = 'var(--surface)';
   let stateTag = '';
   let pulseClass = '';
 
   if (state === 'current') {
-    borderColor = 'var(--active-state)';
-    borderWidth = '2px';
-    stateTag = 'Current';
+    borderColor = 'var(--state-current, #D97706)';
+    borderWidth = '3px';
+    stateTag = 'CURR';
     pulseClass = 'node-pulse-current';
     backgroundColor = 'var(--surface-elevated)';
   } else if (state === 'path') {
-    borderColor = 'var(--success)';
-    borderWidth = '2.5px';
-    stateTag = 'Path';
+    borderColor = 'var(--state-path, #15803D)';
+    borderWidth = '3.5px';
+    stateTag = 'PATH';
     backgroundColor = 'var(--surface-elevated)';
   } else if (state === 'frontier') {
-    borderColor = 'var(--primary-action)';
-    borderWidth = '1.5px';
+    borderColor = 'var(--state-frontier, #2563EB)';
+    borderWidth = '2px';
     borderStyle = 'dashed';
-    stateTag = 'Frontier';
+    stateTag = 'QUEUE';
   } else if (state === 'visited') {
-    borderColor = 'var(--border-strong)';
-    borderWidth = '1.5px';
-    stateTag = 'Visited';
+    borderColor = 'var(--state-visited, #0D9488)';
+    borderWidth = '2px';
+    stateTag = 'SEEN';
+    backgroundColor = 'var(--background-secondary)';
   } else if (isSource) {
-    borderColor = 'var(--success)';
-    borderWidth = '2px';
+    borderColor = 'var(--state-start, #1E4D3A)';
+    borderWidth = '3px';
   } else if (isTarget) {
-    borderColor = 'var(--error)';
-    borderWidth = '2px';
+    borderColor = 'var(--state-target, #A33B2E)';
+    borderWidth = '3px';
   }
 
   return (
@@ -53,11 +54,13 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         borderColor,
         borderWidth,
         borderStyle,
-        borderRadius: 'var(--radius-md)',
+        borderRadius: '50%',
         color: 'var(--text-primary)',
-        boxShadow: selected ? '0 0 0 2px var(--focus-ring)' : 'none',
+        boxShadow: selected
+          ? '0 0 0 3px var(--focus-ring)'
+          : '0 2px 6px rgba(0, 0, 0, 0.05)',
       }}
-      className={`relative min-w-[76px] px-3 py-2 transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
+      className={`relative w-[54px] h-[54px] transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
     >
       {/* Handles */}
       <Handle
@@ -99,56 +102,55 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         }}
       />
 
-      {/* Start / Destination clean indicator */}
+      {/* Start / Destination tag badge above node */}
       {(isSource || isTarget) && (
         <span
-          className="absolute -top-2.5 px-1.5 py-0.2 text-[10px] font-sans font-semibold tracking-wide rounded uppercase border"
+          className="absolute -top-4 px-1.5 py-0.5 text-[11px] font-sans font-bold tracking-wider rounded border shadow-xs"
           style={{
-            backgroundColor: isSource ? 'var(--success)' : 'var(--error)',
-            borderColor: isSource ? 'var(--success)' : 'var(--error)',
+            backgroundColor: isSource ? 'var(--state-start, #1E4D3A)' : 'var(--state-target, #A33B2E)',
+            borderColor: isSource ? 'var(--state-start, #1E4D3A)' : 'var(--state-target, #A33B2E)',
             color: '#FFFFFF',
           }}
         >
-          {isSource ? 'Start' : 'Dest'}
+          {isSource ? 'START' : 'DEST'}
         </span>
       )}
 
-      {/* Node label in Inter Variable */}
+      {/* Main Node label (Strongest element) */}
       <span
-        className="font-semibold text-base tracking-tight font-sans"
+        className="font-bold text-base tracking-tight font-sans leading-none"
         style={{ color: 'var(--text-primary)' }}
       >
         {nodeData.label || id}
       </span>
 
-      {/* Distance in JetBrains Mono Variable */}
-      <div className="flex items-center gap-1 mt-0.5">
-        {stateTag && !isSource && !isTarget && (
-          <span
-            className="px-1 py-0.2 text-[10px] font-sans font-medium rounded border"
-            style={{
-              backgroundColor: 'var(--background-secondary)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            {stateTag}
-          </span>
-        )}
+      {/* Distance tag badge below node */}
+      {distance !== undefined && distance !== null && (
+        <div
+          className="absolute -bottom-4 px-1.5 py-0.5 rounded border text-[11px] font-mono font-semibold whitespace-nowrap shadow-xs"
+          style={{
+            backgroundColor: 'var(--surface-elevated)',
+            borderColor: 'var(--border-strong)',
+            color: distance === Infinity ? 'var(--text-muted)' : 'var(--text-primary)',
+          }}
+        >
+          {distance === Infinity ? '∞' : distance}
+        </div>
+      )}
 
-        {distance !== undefined && distance !== null && (
-          <span
-            className="px-1 py-0.2 text-xs font-mono font-medium rounded border"
-            style={{
-              backgroundColor: 'var(--background)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            d: {distance >= 1e8 ? '∞' : distance}
-          </span>
-        )}
-      </div>
+      {/* Transient Step state tag if not start/dest */}
+      {stateTag && !isSource && !isTarget && distance === undefined && (
+        <span
+          className="absolute -bottom-3.5 px-1 py-0.2 text-[10px] font-sans font-semibold rounded border"
+          style={{
+            backgroundColor: 'var(--background-secondary)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          {stateTag}
+        </span>
+      )}
     </div>
   );
 });

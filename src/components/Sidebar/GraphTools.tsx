@@ -2,7 +2,9 @@ import React from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import type { GraphNodeData, GraphEdgeData } from '../../types/graph';
 import { PRESET_GRAPHS } from '../../data/presetGraphs';
-import { Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '../UI/Button';
+import { SelectField } from '../UI/SelectField';
 
 interface GraphToolsProps {
   nodes: Node<GraphNodeData>[];
@@ -81,101 +83,62 @@ export const GraphTools: React.FC<GraphToolsProps> = ({
     }
   };
 
-  return (
-    <div className="space-y-3">
-      <h3
-        className="text-xs font-semibold uppercase tracking-wider"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        Graph
-      </h3>
+  const presetOptions = [
+    { value: '', label: 'Select a benchmark preset...' },
+    ...PRESET_GRAPHS.map((p) => ({ value: p.id, label: p.name })),
+  ];
 
-      {/* Preset selector (The only one in the app) */}
-      <div className="space-y-1">
-        <label
-          htmlFor="graph-preset-select"
-          className="block text-xs font-medium"
-          style={{ color: 'var(--text-secondary)' }}
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={{ color: 'var(--text-muted)' }}
         >
-          Preset graph
-        </label>
-        <select
-          id="graph-preset-select"
-          defaultValue=""
-          onChange={(e) => {
-            if (e.target.value) {
-              handleLoadPreset(e.target.value);
-              e.target.value = '';
-            }
-          }}
-          className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-            color: 'var(--text-primary)',
-          }}
-        >
-          <option value="" disabled style={{ backgroundColor: 'var(--surface)' }}>
-            Choose a preset scenario...
-          </option>
-          {PRESET_GRAPHS.map((preset) => (
-            <option
-              key={preset.id}
-              value={preset.id}
-              style={{
-                backgroundColor: 'var(--surface)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              {preset.name}
-            </option>
-          ))}
-        </select>
+          Graph Presets & Edits
+        </h3>
+        <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+          {nodes.length} vertices
+        </span>
       </div>
 
-      {/* Primary Add Vertex Button */}
-      <button
-        onClick={handleAddVertex}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
-        style={{
-          backgroundColor: 'var(--primary-subtle)',
-          border: '1px solid var(--border-strong)',
-          color: 'var(--primary-action)',
+      {/* Preset selector */}
+      <SelectField
+        id="graph-preset-select"
+        label="Preset graph"
+        options={presetOptions}
+        defaultValue=""
+        onChange={(e) => {
+          if (e.target.value) {
+            handleLoadPreset(e.target.value);
+            e.target.value = '';
+          }
         }}
-      >
-        <Plus className="w-4 h-4" />
-        <span>Add vertex</span>
-      </button>
+      />
 
-      {/* Action buttons */}
-      <div className="grid grid-cols-2 gap-2 pt-0.5">
-        <button
-          onClick={onResetVisualization}
-          title="Reset algorithm state"
-          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer min-h-[38px]"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-            color: 'var(--text-secondary)',
-          }}
+      {/* Vertex actions */}
+      <div className="flex flex-col gap-2 pt-1">
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          leftIcon={<Plus className="w-4 h-4" />}
+          onClick={handleAddVertex}
+          className="w-full justify-center"
         >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset view</span>
-        </button>
+          Add vertex
+        </Button>
 
-        <button
+        <Button
+          type="button"
+          variant="danger"
+          size="sm"
+          leftIcon={<Trash2 className="w-3.5 h-3.5" />}
           onClick={handleClearGraph}
-          title="Clear canvas"
-          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer min-h-[38px]"
-          style={{
-            backgroundColor: 'transparent',
-            borderColor: 'var(--error-subtle)',
-            color: 'var(--error)',
-          }}
+          className="w-full justify-center"
         >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>Clear graph</span>
-        </button>
+          Clear canvas
+        </Button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AlgorithmType } from '../../types/graph';
+import { SegmentedSelector } from '../UI/SegmentedSelector';
 
 interface AlgorithmSelectorProps {
   selectedAlgorithm: AlgorithmType;
@@ -10,74 +11,41 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
   selectedAlgorithm,
   onSelectAlgorithm,
 }) => {
-  const algorithms: {
-    id: AlgorithmType;
-    name: string;
-    purpose: string;
-    complexity: string;
-  }[] = [
+  const options = [
     {
-      id: 'bfs',
-      name: 'Breadth-First Search',
-      purpose: 'Minimum hops (unweighted)',
-      complexity: 'O(V + E)',
+      value: 'bfs' as const,
+      label: 'Breadth-First Search',
+      badge: 'O(V + E)',
+      description: 'Finds minimum-hop shortest path on unweighted graphs.',
     },
     {
-      id: 'dijkstra',
-      name: "Dijkstra's Algorithm",
-      purpose: 'Minimum total weight (w ≥ 0)',
-      complexity: 'O((V+E) log V)',
+      value: 'dijkstra' as const,
+      label: "Dijkstra's Algorithm",
+      badge: 'O((V+E) log V)',
+      description: 'Finds minimum-weight path with non-negative edge costs.',
     },
   ];
 
   return (
-    <div className="space-y-2.5">
-      <h3
-        className="text-xs font-semibold uppercase tracking-wider"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        Algorithms
-      </h3>
-
-      <div className="space-y-1.5">
-        {algorithms.map((algo) => {
-          const isSelected = selectedAlgorithm === algo.id;
-
-          return (
-            <button
-              key={algo.id}
-              onClick={() => onSelectAlgorithm(algo.id)}
-              className="w-full text-left px-3.5 py-2.5 rounded-md border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-              style={{
-                backgroundColor: isSelected ? 'var(--background-secondary)' : 'var(--background)',
-                borderColor: isSelected ? 'var(--border-strong)' : 'var(--border)',
-                borderWidth: isSelected ? '1.5px' : '1px',
-              }}
-            >
-              <div>
-                <span
-                  className="text-sm font-semibold tracking-tight block"
-                  style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}
-                >
-                  {algo.name}
-                </span>
-                <p
-                  className="text-xs mt-0.5 leading-snug"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {algo.purpose}
-                </p>
-                <span
-                  className="inline-block mt-1.5 text-xs font-mono font-medium"
-                  style={{ color: isSelected ? 'var(--primary-action)' : 'var(--text-secondary)' }}
-                >
-                  {algo.complexity}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h3
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Algorithm Engine
+        </h3>
+        <span className="text-[11px] font-mono text-[var(--primary-action)] font-medium">
+          C++17 WASM
+        </span>
       </div>
+
+      <SegmentedSelector
+        options={options}
+        value={selectedAlgorithm}
+        onChange={onSelectAlgorithm}
+        ariaLabel="Choose pathfinding algorithm"
+      />
     </div>
   );
 };

@@ -132,7 +132,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   }, [edges, currentSnapshot, isDirected]);
 
   const onNodesChange: OnNodesChange<Node<GraphNodeData>> = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes) => {
+      // Ignore dimension-only changes triggered by DOM measurement during step transitions
+      const meaningfulChanges = changes.filter((c) => c.type !== 'dimensions');
+      if (meaningfulChanges.length > 0) {
+        setNodes((nds) => applyNodeChanges(meaningfulChanges, nds));
+      }
+    },
     [setNodes]
   );
 

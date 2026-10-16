@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Cpu, Layers, GitCompare } from 'lucide-react';
+import { Button } from '../components/UI/Button';
 
 interface AboutPageProps {
   theme: 'dark' | 'light';
@@ -9,15 +10,27 @@ interface AboutPageProps {
 export const AboutPage: React.FC<AboutPageProps> = () => {
   return (
     <div
-      className="min-h-[calc(100vh-64px)] overflow-y-auto px-6 py-12"
+      className="min-h-[calc(100vh-64px)] overflow-y-auto px-6 py-12 select-none"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
       }}
     >
-      <article className="max-w-3xl mx-auto space-y-12">
+      <article className="max-w-3xl mx-auto space-y-10">
         {/* Document Header */}
-        <header className="border-b pb-8" style={{ borderColor: 'var(--border)' }}>
+        <header className="border-b pb-6" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <span
+              className="text-xs font-mono px-2 py-0.5 rounded border uppercase"
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              Academic Documentation
+            </span>
+          </div>
           <h1
             className="text-3xl sm:text-4xl font-bold tracking-tight"
             style={{ color: 'var(--text-primary)' }}
@@ -25,107 +38,170 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
             About PathScope
           </h1>
           <p
-            className="mt-3 text-base leading-relaxed"
+            className="mt-2 text-base leading-relaxed"
             style={{ color: 'var(--text-secondary)' }}
           >
-            An interactive educational visualizer designed for studying graph shortest path algorithms through deterministic, step-by-step execution.
+            An interactive educational laboratory designed for rigorous study of graph shortest path algorithms through deterministic, step-by-step state inspection.
           </p>
         </header>
 
-        {/* 1. What PathScope Does */}
+        {/* 1. Core Purpose */}
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            What PathScope does
+          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Layers className="w-4 h-4 text-[var(--primary-action)]" />
+            <span>What PathScope does</span>
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            PathScope lets students and developers build arbitrary graphs, set non-negative edge weights, choose a source and destination, and inspect algorithmic state transitions in real time. Rather than observing only the final computed route, users step through each queue push and pop, edge relaxation, and distance update as it occurs.
+          <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Graph algorithms in computer science textbooks are frequently presented as abstract pseudocode or static final paths. PathScope lets students and researchers construct custom topologies, configure non-negative edge costs, choose source and destination vertices, and step through each algorithmic decision (queue push/pop, tentative distance relaxation, and settled vertex marking) in real time.
           </p>
         </section>
 
-        {/* 2. Why BFS and Dijkstra Were Selected */}
+        {/* 2. Canonical Algorithms */}
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Why BFS and Dijkstra were selected
+          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <GitCompare className="w-4 h-4 text-[var(--primary-action)]" />
+            <span>Why BFS and Dijkstra were selected</span>
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Breadth-First Search (BFS) and Dijkstra’s Algorithm together form the foundation of single-source shortest path theory:
+          <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Breadth-First Search (BFS) and Dijkstra’s Algorithm represent the two canonical foundations of single-source shortest path theory:
           </p>
-          <ul className="list-disc pl-5 text-sm space-y-2" style={{ color: 'var(--text-secondary)' }}>
-            <li>
-              <strong style={{ color: 'var(--text-primary)' }}>Breadth-First Search:</strong> Operates on unweighted graphs using a standard FIFO queue. It minimizes the total count of traversed edges (hop count) in linear time <code className="font-mono text-xs px-1 py-0.5 rounded border" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>O(V + E)</code>.
-            </li>
-            <li>
-              <strong style={{ color: 'var(--text-primary)' }}>Dijkstra’s Algorithm:</strong> Operates on graphs with non-negative edge weights using a priority queue (min-heap). It minimizes the cumulative edge weight sum in <code className="font-mono text-xs px-1 py-0.5 rounded border" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>O((V + E) log V)</code>.
-            </li>
-          </ul>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Comparing these two algorithms on the same topology highlights the critical distinction between hop-optimality and weight-optimality.
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div
+              className="p-4 rounded-xl border text-xs"
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="font-semibold text-sm mb-1 text-[var(--text-primary)]">
+                Breadth-First Search
+              </div>
+              <p className="leading-relaxed text-[var(--text-secondary)]">
+                Operates on unweighted graphs using a FIFO queue (<code className="font-mono">std::queue</code>). It minimizes the number of edge hops in linear time <code className="font-mono font-bold">O(V + E)</code>.
+              </p>
+            </div>
+
+            <div
+              className="p-4 rounded-xl border text-xs"
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="font-semibold text-sm mb-1 text-[var(--text-primary)]">
+                Dijkstra’s Algorithm
+              </div>
+              <p className="leading-relaxed text-[var(--text-secondary)]">
+                Operates on non-negative weighted graphs using a min-heap (<code className="font-mono">std::priority_queue</code>). It minimizes the cumulative path weight in <code className="font-mono font-bold">O((V + E) log V)</code>.
+              </p>
+            </div>
+          </div>
         </section>
 
-        {/* 3. C++ / WebAssembly Architecture */}
+        {/* 3. C++17 & WebAssembly Architecture */}
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            C++ and WebAssembly architecture
+          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Cpu className="w-4 h-4 text-[var(--primary-action)]" />
+            <span>C++ and WebAssembly architecture</span>
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            All graph representation, validation, and algorithm execution logic is written in native C++17 and compiled to WebAssembly via Emscripten.
+          <p className="text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            All graph data structures, validation constraints, and algorithm execution logic are implemented in native C++17 and compiled to WebAssembly via Emscripten. The React/TypeScript frontend serves purely as the presentation, graph editing, and playback interface:
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            When an execution is initiated, the graph is serialized into C++ memory where standard library structures (<code className="font-mono text-xs px-1 py-0.5 rounded border" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>std::queue</code> and <code className="font-mono text-xs px-1 py-0.5 rounded border" style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)' }}>std::priority_queue</code>) compute an immutable sequence of step snapshots. React and TypeScript handle user interactions, graph manipulation, and timeline playback.
-          </p>
+
+          <div
+            className="p-4 rounded-xl border font-mono text-xs overflow-x-auto leading-relaxed"
+            style={{
+              backgroundColor: 'var(--background-secondary)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            Graph Editor (React Flow)
+            <br />
+            &nbsp;&nbsp;→ TypeScript Serialization
+            <br />
+            &nbsp;&nbsp;→ Emscripten WebAssembly Bridge
+            <br />
+            &nbsp;&nbsp;→ C++17 Algorithm Engine (bfs.cpp & dijkstra.cpp)
+            <br />
+            &nbsp;&nbsp;→ Deterministic Step Snapshots (std::vector&lt;StepSnapshot&gt;)
+            <br />
+            &nbsp;&nbsp;→ Playback Dock & Visual Inspection
+          </div>
         </section>
 
-        {/* 4. Completed Milestone */}
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+        {/* 4. Current 50% Milestone & Roadmap */}
+        <section className="space-y-4 pt-2">
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Completed milestone
           </h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            This version represents the completed 50% course project milestone:
-          </p>
-          <ul className="list-disc pl-5 text-sm space-y-1.5" style={{ color: 'var(--text-secondary)' }}>
-            <li>Native C++17 implementations of BFS and Dijkstra’s Algorithm.</li>
-            <li>Bidirectional WebAssembly bridge with batch snapshot serialization.</li>
-            <li>Interactive graph editor with vertex positioning and edge weight configuration.</li>
-            <li>Full playback dock: play, pause, step forward, step backward, seek, and speed control.</li>
-            <li>Synchronized inspector: step explanation, pseudocode highlighting, data structure state, and final metrics.</li>
-            <li>Side-by-side comparative analysis benchmark on identical topologies.</li>
-          </ul>
-        </section>
 
-        {/* 5. Future Scope */}
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Future scope
-          </h2>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Planned extensions for subsequent project phases:
-          </p>
-          <ul className="list-disc pl-5 text-sm space-y-1.5" style={{ color: 'var(--text-secondary)' }}>
-            <li>Depth-First Search (DFS) with call stack visualization.</li>
-            <li>Bellman–Ford algorithm with negative edge weights and negative cycle detection.</li>
-            <li>Floyd–Warshall all-pairs shortest path matrix visualizer.</li>
-            <li>Topological sort and DAG shortest path algorithm.</li>
-            <li>Graph import and export in JSON format.</li>
-          </ul>
+          <div className="space-y-3">
+            <div
+              className="p-4 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-sm text-[var(--primary-action)]">
+                  Completed 50% Milestone (Current Production Release)
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--primary-subtle)] text-[var(--primary-action)] font-bold">
+                  100% Verified
+                </span>
+              </div>
+              <ul className="list-disc pl-5 text-xs space-y-1.5 text-[var(--text-secondary)]">
+                <li>Native C++17 canonical engines for BFS and Dijkstra.</li>
+                <li>Bidirectional WebAssembly bridge with batch snapshot memory serialization.</li>
+                <li>Interactive graph canvas with custom node geometry and weighted edges.</li>
+                <li>Coordinated transport playback dock with scrub slider and speed multiplier.</li>
+                <li>Educational inspector with synchronized pseudocode, explanation, and data structures.</li>
+                <li>Benchmark comparison tool with side-by-side metric analytics.</li>
+              </ul>
+            </div>
+
+            <div
+              className="p-4 rounded-xl border"
+              style={{
+                backgroundColor: 'var(--background-secondary)',
+                borderColor: 'var(--border)',
+                opacity: 0.85,
+              }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-sm text-[var(--text-muted)]">
+                  Future scope
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
+                  Future Work
+                </span>
+              </div>
+              <ul className="list-disc pl-5 text-xs space-y-1.5 text-[var(--text-muted)]">
+                <li>Depth-First Search (DFS) with recursion call-stack inspection.</li>
+                <li>Bellman-Ford algorithm with negative edge detection and arbitrary cycles.</li>
+                <li>Floyd-Warshall all-pairs dynamic programming matrix.</li>
+                <li>DAG shortest path and topological ordering visualizer.</li>
+                <li>A* heuristic search with Euclidean distance estimators.</li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         {/* Footer CTA */}
-        <footer className="pt-8 border-t flex justify-between items-center" style={{ borderColor: 'var(--border)' }}>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            PathScope Visualizer
+        <footer className="pt-6 border-t flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
+          <span className="text-xs font-mono text-[var(--text-muted)]">
+            PathScope v0.5.0
           </span>
-          <Link
-            to="/visualizer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md text-sm font-semibold transition-colors focus-visible:outline-none min-h-[40px]"
-            style={{
-              backgroundColor: 'var(--primary-action)',
-              color: '#FFFFFF',
-            }}
-          >
-            <span>Launch Visualizer</span>
-            <ArrowRight className="w-4 h-4" />
+          <Link to="/visualizer">
+            <Button
+              variant="primary"
+              size="md"
+              rightIcon={<ArrowRight className="w-4 h-4" />}
+            >
+              Launch Visualizer
+            </Button>
           </Link>
         </footer>
       </article>

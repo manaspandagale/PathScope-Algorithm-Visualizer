@@ -33,24 +33,32 @@ export const CustomEdge = memo(({
   const state = data?.state || 'default';
 
   let strokeColor = 'var(--border-strong)';
-  let strokeWidth = 1.75;
+  let strokeWidth = 2;
   let strokeDasharray = '';
+  let opacity = 0.85;
 
   if (state === 'path') {
-    strokeColor = 'var(--success)';
-    strokeWidth = 3;
+    strokeColor = 'var(--state-path, #15803D)';
+    strokeWidth = 3.5;
+    opacity = 1;
   } else if (state === 'current') {
-    strokeColor = 'var(--active-state)';
-    strokeWidth = 2.5;
-    strokeDasharray = '5 5';
+    strokeColor = 'var(--state-current, #D97706)';
+    strokeWidth = 3;
+    strokeDasharray = '6 4';
+    opacity = 1;
   } else if (state === 'visited') {
     strokeColor = 'var(--border-strong)';
     strokeWidth = 2;
+    opacity = 0.55;
+  } else if (data?.state === 'default') {
+    strokeColor = 'var(--border)';
+    opacity = 0.65;
   }
 
   if (selected) {
     strokeColor = 'var(--primary-action)';
-    strokeWidth = 2.5;
+    strokeWidth = 3;
+    opacity = 1;
   }
 
   const handleWeightClick = (e: React.MouseEvent) => {
@@ -73,7 +81,8 @@ export const CustomEdge = memo(({
           stroke: strokeColor,
           strokeWidth,
           strokeDasharray,
-          transition: 'stroke 0.15s, stroke-width 0.15s',
+          opacity,
+          transition: 'stroke 0.2s, stroke-width 0.2s, opacity 0.2s',
         }}
       />
       <EdgeLabelRenderer>
@@ -83,25 +92,32 @@ export const CustomEdge = memo(({
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             pointerEvents: 'all',
           }}
-          className="nodrag nopan"
+          className="nodrag nopan select-none"
         >
           <button
             type="button"
             onClick={handleWeightClick}
-            title="Click to edit weight"
+            title="Click to edit edge weight"
             aria-label={`Edge weight ${weight}. Click to edit.`}
-            className="px-2 py-0.5 text-xs font-mono font-medium rounded border transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+            className={`
+              px-2.5 py-1 text-xs font-mono font-semibold rounded-md border transition-all duration-150 cursor-pointer shadow-xs
+              hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]
+            `}
             style={{
-              backgroundColor: 'var(--surface-elevated)',
+              backgroundColor: state === 'path'
+                ? 'var(--primary-subtle)'
+                : state === 'current'
+                ? 'var(--warning-subtle)'
+                : 'var(--surface-elevated)',
               borderColor: state === 'path'
-                ? 'var(--success)'
+                ? 'var(--state-path, #15803D)'
                 : state === 'current'
-                ? 'var(--active-state)'
-                : 'var(--border)',
+                ? 'var(--state-current, #D97706)'
+                : 'var(--border-strong)',
               color: state === 'path'
-                ? 'var(--success)'
+                ? 'var(--state-path, #15803D)'
                 : state === 'current'
-                ? 'var(--active-state)'
+                ? 'var(--state-current, #D97706)'
                 : 'var(--text-primary)',
             }}
           >

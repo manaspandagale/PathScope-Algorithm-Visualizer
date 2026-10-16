@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Node, Edge } from '@xyflow/react';
-import { AlertCircle, Loader2, SlidersHorizontal, PanelRight } from 'lucide-react';
+import { AlertCircle, Loader2, SlidersHorizontal, PanelRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData } from '../types/graph';
 import { useAlgorithmPlayback } from '../hooks/useAlgorithmPlayback';
 import { Sidebar } from '../components/Sidebar/Sidebar';
@@ -9,6 +9,7 @@ import { GraphCanvas } from '../components/Canvas/GraphCanvas';
 import { InfoPanel } from '../components/InfoPanel/InfoPanel';
 import { PlaybackBar } from '../components/Playback/PlaybackBar';
 import { EdgeWeightModal } from '../components/Canvas/EdgeWeightModal';
+import { IconButton } from '../components/UI/IconButton';
 
 interface VisualizerPageProps {
   theme: 'dark' | 'light';
@@ -42,6 +43,10 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
   setSelectedNodeId,
 }) => {
   const [searchParams] = useSearchParams();
+
+  // Desktop collapsible panels
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [desktopInspectorOpen, setDesktopInspectorOpen] = useState(true);
 
   // Mobile / tablet panel drawers
   const [mobileConfigOpen, setMobileConfigOpen] = useState(false);
@@ -135,6 +140,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
       {/* Validation Banner (e.g. Negative Weights in Dijkstra) */}
       {errorMessage && (
         <div
+          role="alert"
           className="px-6 py-2 flex items-center justify-between text-xs font-medium border-b z-30"
           style={{
             backgroundColor: 'var(--error)',
@@ -146,7 +152,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             <span>{errorMessage}</span>
           </div>
           <span className="text-xs font-mono opacity-80">
-            Validation check
+            C++ Engine Validation
           </span>
         </div>
       )}
@@ -164,7 +170,8 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             setMobileConfigOpen(!mobileConfigOpen);
             setMobileInspectorOpen(false);
           }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded border text-xs font-medium cursor-pointer min-h-[44px]"
+          aria-expanded={mobileConfigOpen}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileConfigOpen ? 'var(--background-secondary)' : 'var(--background)',
             borderColor: 'var(--border)',
@@ -180,7 +187,8 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             setMobileInspectorOpen(!mobileInspectorOpen);
             setMobileConfigOpen(false);
           }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded border text-xs font-medium cursor-pointer min-h-[44px]"
+          aria-expanded={mobileInspectorOpen}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileInspectorOpen ? 'var(--background-secondary)' : 'var(--background)',
             borderColor: 'var(--border)',
@@ -192,12 +200,12 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         </button>
       </div>
 
-      {/* Main Workbench: Left Rail (272px) + Center Canvas + Right Inspector (360px) */}
+      {/* Main Workbench: Left Rail + Center Canvas + Right Inspector */}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Backdrop for mobile drawer */}
         {(mobileConfigOpen || mobileInspectorOpen) && (
           <div
-            className="fixed inset-0 bg-black/30 z-30 lg:hidden"
+            className="fixed inset-0 bg-black/40 z-30 lg:hidden backdrop-blur-xs"
             onClick={() => {
               setMobileConfigOpen(false);
               setMobileInspectorOpen(false);
@@ -205,37 +213,65 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
           />
         )}
 
-        {/* Left Control Panel (Desktop: persistent 272px, Mobile: drawer) */}
+        {/* Left Control Panel (Desktop: collapsible 256px, Mobile: off-canvas drawer) */}
         <div
           className={`
             fixed lg:static top-0 lg:top-auto left-0 bottom-0 lg:bottom-auto z-40
-            w-[272px] shrink-0 transition-transform duration-200
-            ${mobileConfigOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            ${desktopSidebarOpen ? 'lg:w-[256px]' : 'lg:w-0'} shrink-0 transition-all duration-200 overflow-hidden
+            ${mobileConfigOpen ? 'translate-x-0 w-[272px]' : '-translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
-            borderRight: '1px solid var(--border)',
+            borderRight: desktopSidebarOpen ? '1px solid var(--border)' : 'none',
           }}
         >
-          <Sidebar
-            algorithm={algorithm}
-            setAlgorithm={setAlgorithm}
-            nodes={nodes}
-            setNodes={setNodes}
-            setEdges={setEdges}
-            sourceId={sourceId}
-            targetId={targetId}
-            setSourceId={setSourceId}
-            setTargetId={setTargetId}
-            onResetVisualization={restart}
-          />
+          <div className="w-[256px] h-full">
+            <Sidebar
+              algorithm={algorithm}
+              setAlgorithm={setAlgorithm}
+              nodes={nodes}
+              setNodes={setNodes}
+              setEdges={setEdges}
+              sourceId={sourceId}
+              targetId={targetId}
+              setSourceId={setSourceId}
+              setTargetId={setTargetId}
+              onResetVisualization={restart}
+            />
+          </div>
         </div>
 
         {/* Center Graph Canvas */}
         <main className="flex-1 h-full relative overflow-hidden">
+          {/* Quick toggle for desktop left sidebar */}
+          <div className="hidden lg:block absolute top-4 left-4 z-20">
+            {!desktopSidebarOpen && (
+              <IconButton
+                icon={<ChevronRight className="w-4 h-4" />}
+                label="Expand Graph Controls"
+                onClick={() => setDesktopSidebarOpen(true)}
+                variant="surface"
+                size="sm"
+              />
+            )}
+          </div>
+
+          {/* Quick toggle for desktop right inspector */}
+          <div className="hidden lg:block absolute top-4 right-4 z-20">
+            {!desktopInspectorOpen && (
+              <IconButton
+                icon={<ChevronLeft className="w-4 h-4" />}
+                label="Expand Step Inspector"
+                onClick={() => setDesktopInspectorOpen(true)}
+                variant="surface"
+                size="sm"
+              />
+            )}
+          </div>
+
           {isLoadingWasm && (
             <div
-              className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded border text-xs font-mono font-medium shadow-sm"
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded border text-xs font-mono font-medium shadow-sm"
               style={{
                 backgroundColor: 'var(--surface-elevated)',
                 borderColor: 'var(--border)',
@@ -264,24 +300,26 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
           />
         </main>
 
-        {/* Right Inspector (Desktop: persistent 360px, Mobile: drawer) */}
+        {/* Right Inspector (Desktop: collapsible 340px, Mobile: drawer) */}
         <div
           className={`
             fixed lg:static top-0 lg:top-auto right-0 bottom-0 lg:bottom-auto z-40
-            w-[360px] shrink-0 transition-transform duration-200
-            ${mobileInspectorOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+            ${desktopInspectorOpen ? 'lg:w-[340px]' : 'lg:w-0'} shrink-0 transition-all duration-200 overflow-hidden
+            ${mobileInspectorOpen ? 'translate-x-0 w-[320px]' : 'translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
-            borderLeft: '1px solid var(--border)',
+            borderLeft: desktopInspectorOpen ? '1px solid var(--border)' : 'none',
           }}
         >
-          <InfoPanel
-            algorithm={algorithm}
-            snapshot={currentSnapshot}
-            currentStepIndex={currentStepIndex}
-            totalSteps={totalSteps}
-          />
+          <div className="w-[340px] h-full">
+            <InfoPanel
+              algorithm={algorithm}
+              snapshot={currentSnapshot}
+              currentStepIndex={currentStepIndex}
+              totalSteps={totalSteps}
+            />
+          </div>
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Check } from 'lucide-react';
+import { Button } from '../UI/Button';
+import { IconButton } from '../UI/IconButton';
 
 interface EdgeWeightModalProps {
   isOpen: boolean;
@@ -66,10 +68,10 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="edge-weight-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs select-none"
     >
       <div
-        className="w-full max-w-sm rounded-lg border p-6 shadow-lg"
+        className="w-full max-w-sm rounded-xl border p-6 shadow-xl"
         style={{
           backgroundColor: 'var(--surface-elevated)',
           borderColor: 'var(--border)',
@@ -87,14 +89,13 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
           >
             Edit edge weight
           </h3>
-          <button
+          <IconButton
+            icon={<X className="w-4 h-4" />}
+            label="Close dialog"
             onClick={onClose}
-            aria-label="Close dialog"
-            className="p-1 rounded cursor-pointer transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            <X className="w-4 h-4" />
-          </button>
+            variant="ghost"
+            size="sm"
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -114,7 +115,7 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
               step="1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              className="w-full px-3 py-2 rounded-md border font-mono text-base font-medium focus-visible:outline-none min-h-[44px]"
+              className="w-full px-3 py-2 rounded-md border font-mono text-base font-semibold focus-visible:outline-none min-h-[44px]"
               style={{
                 backgroundColor: 'var(--background)',
                 borderColor: error ? 'var(--error)' : 'var(--border)',
@@ -130,7 +131,7 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
               className="mt-2 text-xs leading-relaxed"
               style={{ color: 'var(--text-muted)' }}
             >
-              Dijkstra minimizes cumulative edge weights. BFS treats each edge as 1 hop.
+              Dijkstra minimizes cumulative edge weights. BFS treats each edge as 1 hop regardless of weight.
             </p>
           </div>
 
@@ -138,29 +139,22 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
             className="flex justify-end gap-2.5 pt-3 border-t"
             style={{ borderColor: 'var(--border)' }}
           >
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={onClose}
-              className="px-4 py-2 rounded-md border text-sm font-medium transition-colors cursor-pointer min-h-[40px]"
-              style={{
-                backgroundColor: 'var(--surface)',
-                borderColor: 'var(--border)',
-                color: 'var(--text-secondary)',
-              }}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer min-h-[40px]"
-              style={{
-                backgroundColor: 'var(--primary-action)',
-                color: '#FFFFFF',
-              }}
+              variant="primary"
+              size="md"
+              leftIcon={<Check className="w-4 h-4" />}
             >
-              <Check className="w-4 h-4" />
-              <span>Save weight</span>
-            </button>
+              Save weight
+            </Button>
           </div>
         </form>
       </div>

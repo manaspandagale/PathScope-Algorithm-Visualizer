@@ -5,12 +5,12 @@ export const CanvasLegend: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="absolute top-4 left-4 z-10">
+    <div className="absolute top-4 left-4 z-10 select-none">
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          aria-label="Open graph legend"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium shadow-sm transition-colors cursor-pointer"
+          aria-label="Open graph state legend"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium shadow-xs transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
           style={{
             backgroundColor: 'var(--surface-elevated)',
             borderColor: 'var(--border)',
@@ -22,7 +22,7 @@ export const CanvasLegend: React.FC = () => {
         </button>
       ) : (
         <div
-          className="p-3.5 rounded-md border text-xs shadow-md space-y-2 w-64"
+          className="p-3.5 rounded-md border text-xs shadow-md space-y-2.5 w-64 animate-in fade-in duration-150"
           style={{
             backgroundColor: 'var(--surface-elevated)',
             borderColor: 'var(--border-strong)',
@@ -31,7 +31,7 @@ export const CanvasLegend: React.FC = () => {
         >
           <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border)' }}>
             <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
-              Node & Edge States
+              Algorithm States
             </span>
             <button
               onClick={() => setIsOpen(false)}
@@ -46,51 +46,49 @@ export const CanvasLegend: React.FC = () => {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm border"
+                className="w-3 h-3 rounded-full border-2"
                 style={{
                   backgroundColor: 'var(--surface)',
-                  borderColor: 'var(--success)',
-                  borderWidth: '2px',
+                  borderColor: 'var(--state-start, #1E4D3A)',
                 }}
               />
               <span style={{ color: 'var(--text-secondary)' }}>Start</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm border"
+                className="w-3 h-3 rounded-full border-2"
                 style={{
                   backgroundColor: 'var(--surface)',
-                  borderColor: 'var(--error)',
-                  borderWidth: '2px',
+                  borderColor: 'var(--state-target, #A33B2E)',
                 }}
               />
               <span style={{ color: 'var(--text-secondary)' }}>Destination</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm"
-                style={{ backgroundColor: 'var(--active-state)' }}
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: 'var(--state-current, #D97706)' }}
               />
               <span style={{ color: 'var(--text-secondary)' }}>Current</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm border border-dashed"
-                style={{ borderColor: 'var(--primary-action)' }}
+                className="w-3 h-3 rounded-full border-2 border-dashed"
+                style={{ borderColor: 'var(--state-frontier, #2563EB)' }}
               />
-              <span style={{ color: 'var(--text-secondary)' }}>Frontier</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Queue/Frontier</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm border"
-                style={{ borderColor: 'var(--border-strong)' }}
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: 'var(--state-visited, #0D9488)' }}
               />
               <span style={{ color: 'var(--text-secondary)' }}>Visited</span>
             </div>
             <div className="flex items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-sm"
-                style={{ backgroundColor: 'var(--success)' }}
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: 'var(--state-path, #15803D)' }}
               />
               <span style={{ color: 'var(--text-secondary)' }}>Shortest path</span>
             </div>
@@ -100,5 +98,3 @@ export const CanvasLegend: React.FC = () => {
     </div>
   );
 };
-
-export default CanvasLegend;

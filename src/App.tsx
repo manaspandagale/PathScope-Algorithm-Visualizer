@@ -66,13 +66,22 @@ export const App: React.FC = () => {
           <React.Suspense
             fallback={
               <div
-                className="w-full h-full flex items-center justify-center text-sm font-medium"
+                className="w-full h-full flex flex-col items-center justify-center gap-3 select-none"
                 style={{
                   backgroundColor: 'var(--background)',
                   color: 'var(--text-secondary)',
                 }}
               >
-                Loading...
+                <div
+                  className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
+                  style={{
+                    borderColor: 'var(--border-strong)',
+                    borderTopColor: 'var(--primary-action)',
+                  }}
+                />
+                <span className="text-xs font-mono tracking-wider uppercase opacity-70">
+                  Loading module...
+                </span>
               </div>
             }
           >

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData, StepSnapshot } from '../types/graph';
 import { executeAlgorithmWasm, getWasmInitError } from '../wasm/algorithmEngine';
@@ -27,6 +27,28 @@ export function useAlgorithmPlayback({
   const [isLoadingWasm, setIsLoadingWasm] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Stable graph topology fingerprint to avoid recomputing WASM snapshots on dimension or drag changes
+  const graphTopologyKey = useMemo(() => {
+    const nodeIds = nodes.map((n) => n.id).sort().join(',');
+    const edgeSpecs = edges
+      .map((e) => `${e.id}:${e.source}->${e.target}:${e.data?.weight ?? 1}`)
+      .sort()
+      .join(';');
+    return `${algorithm}|${sourceId}|${targetId}|${isDirected ? 'dir' : 'undir'}|${nodeIds}|${edgeSpecs}`;
+  }, [algorithm, sourceId, targetId, isDirected, nodes, edges]);
+
+  // Keep latest state in refs for bulletproof interval execution
+  const currentStepRef = useRef(currentStepIndex);
+  const totalStepsRef = useRef(snapshots.length);
+
+  useEffect(() => {
+    currentStepRef.current = currentStepIndex;
+  }, [currentStepIndex]);
+
+  useEffect(() => {
+    totalStepsRef.current = snapshots.length;
+  }, [snapshots.length]);
+
   const timerRef = useRef<number | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -41,10 +63,9 @@ export function useAlgorithmPlayback({
     clearTimer();
   }, [clearTimer]);
 
-  // Execute C++ WebAssembly algorithm on input changes
+  // Execute C++ WebAssembly algorithm only when graph topology or algorithm parameters change
   useEffect(() => {
     let isCancelled = false;
-    clearTimer();
 
     if (!sourceId || !targetId || nodes.length === 0) {
       Promise.resolve().then(() => {
@@ -53,6 +74,7 @@ export function useAlgorithmPlayback({
           setCurrentStepIndex(0);
           setIsPlaying(false);
           setErrorMessage(null);
+          clearTimer();
         }
       });
       return;
@@ -77,7 +99,6 @@ export function useAlgorithmPlayback({
         setSnapshots(result);
         setCurrentStepIndex(0);
 
-        // Check if algorithm returned an invalid status snapshot
         if (result.length > 0 && result[0].status === 'invalid') {
           setErrorMessage(result[0].explanation);
         } else {
@@ -100,23 +121,17 @@ export function useAlgorithmPlayback({
 
     return () => {
       isCancelled = true;
-      clearTimer();
     };
-  }, [algorithm, nodes, edges, sourceId, targetId, isDirected, pause, clearTimer]);
+    // Deliberately run strictly on topology change, not on internal node reference/dimension changes
+  }, [graphTopologyKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalSteps = snapshots.length;
   const currentSnapshot = snapshots[currentStepIndex] || null;
 
   const nextStep = useCallback(() => {
-    setCurrentStepIndex((prev) => {
-      if (prev < totalSteps - 1) {
-        return prev + 1;
-      } else {
-        pause();
-        return prev;
-      }
-    });
-  }, [totalSteps, pause]);
+    pause();
+    setCurrentStepIndex((prev) => Math.min(totalStepsRef.current - 1, prev + 1));
+  }, [pause]);
 
   const prevStep = useCallback(() => {
     pause();
@@ -131,20 +146,22 @@ export function useAlgorithmPlayback({
   const goToStep = useCallback(
     (index: number) => {
       pause();
-      if (index >= 0 && index < totalSteps) {
+      if (index >= 0 && index < totalStepsRef.current) {
         setCurrentStepIndex(index);
       }
     },
-    [totalSteps, pause]
+    [pause]
   );
 
   const play = useCallback(() => {
-    if (totalSteps === 0) return;
-    if (currentStepIndex >= totalSteps - 1) {
+    if (totalStepsRef.current <= 1) return;
+    // If at the end, restart from beginning
+    if (currentStepRef.current >= totalStepsRef.current - 1) {
       setCurrentStepIndex(0);
+      currentStepRef.current = 0;
     }
     setIsPlaying(true);
-  }, [currentStepIndex, totalSteps]);
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
@@ -154,30 +171,42 @@ export function useAlgorithmPlayback({
     }
   }, [isPlaying, pause, play]);
 
-  // Interval timer for auto-play
+  // Dedicated playback interval ticker
   useEffect(() => {
     if (!isPlaying) {
       clearTimer();
       return;
     }
 
+    if (totalSteps <= 1) {
+      Promise.resolve().then(() => {
+        setIsPlaying(false);
+        clearTimer();
+      });
+      return;
+    }
+
     const intervalMs = Math.max(120, Math.floor(900 / speedMultiplier));
 
     timerRef.current = window.setInterval(() => {
-      setCurrentStepIndex((prev) => {
-        if (prev < totalSteps - 1) {
-          return prev + 1;
-        } else {
-          pause();
-          return prev;
-        }
-      });
+      const current = currentStepRef.current;
+      const total = totalStepsRef.current;
+
+      if (current < total - 1) {
+        const next = current + 1;
+        currentStepRef.current = next;
+        setCurrentStepIndex(next);
+      } else {
+        // Reached end of snapshots
+        setIsPlaying(false);
+        clearTimer();
+      }
     }, intervalMs);
 
     return () => {
       clearTimer();
     };
-  }, [isPlaying, speedMultiplier, totalSteps, pause, clearTimer]);
+  }, [isPlaying, speedMultiplier, totalSteps, clearTimer]);
 
   return {
     snapshots,
