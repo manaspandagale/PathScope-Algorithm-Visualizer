@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Node, Edge } from '@xyflow/react';
-import {
-  GitCompare,
-  Loader2,
-  CheckCircle2,
-  ShieldAlert,
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData, StepSnapshot } from '../types/graph';
 import { PRESET_GRAPHS } from '../data/presetGraphs';
 import { ALGORITHMS_METADATA } from '../data/algorithmsInfo';
@@ -26,23 +21,18 @@ interface BenchmarkResult {
   stepsCount: number;
   timeComplexity: string;
   spaceComplexity: string;
-  guarantee: string;
-  status: string;
 }
 
 export const ComparisonPage: React.FC<ComparisonPageProps> = () => {
-  // Selected Preset
   const [selectedPresetId, setSelectedPresetId] = useState<string>('bfs-vs-dijkstra-tradeoff');
   const currentPreset = useMemo(
     () => PRESET_GRAPHS.find((p) => p.id === selectedPresetId) || PRESET_GRAPHS[0],
     [selectedPresetId]
   );
 
-  // Active source and destination
   const [sourceId, setSourceId] = useState<string>(currentPreset.sourceId);
   const [targetId, setTargetId] = useState<string>(currentPreset.targetId);
 
-  // Sync source and target when preset changes
   const handlePresetChange = (presetId: string) => {
     setSelectedPresetId(presetId);
     const p = PRESET_GRAPHS.find((item) => item.id === presetId);
@@ -56,7 +46,6 @@ export const ComparisonPage: React.FC<ComparisonPageProps> = () => {
   const [dijkstraSnapshots, setDijkstraSnapshots] = useState<StepSnapshot[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Run BFS and Dijkstra simultaneously via C++ WebAssembly
   useEffect(() => {
     let isCancelled = false;
     const runBenchmarks = async () => {
@@ -92,443 +81,284 @@ export const ComparisonPage: React.FC<ComparisonPageProps> = () => {
 
   const results = useMemo<Record<'bfs' | 'dijkstra', BenchmarkResult>>(() => {
     const nodes = currentPreset.nodes;
-    const nodeMap = new Map(nodes.map((n) => [n.id, n.data.label || n.id]));
-    const getLabel = (id: string) => nodeMap.get(id) || id;
+    const nodeMap = new Map(nodes.map((n) => [n.id, (n.data.label || n.id).replace(/^node-/, '')]));
+    const getLabel = (id: string) => nodeMap.get(id) || id.replace(/^node-/, '');
 
     const formatPath = (pathNodes: string[]) => {
-      if (!pathNodes || pathNodes.length === 0) return 'No Path Discovered';
+      if (!pathNodes || pathNodes.length === 0) return 'No path found';
       return pathNodes.map(getLabel).join(' → ');
     };
 
-    // BFS
     const lastBfs = bfsSnapshots[bfsSnapshots.length - 1];
     const bfsFound = lastBfs?.status === 'found';
     const bfs: BenchmarkResult = {
       id: 'bfs',
       name: ALGORITHMS_METADATA.bfs.name,
       pathFound: bfsFound,
-      pathString: bfsFound ? formatPath(lastBfs.pathNodes) : 'Target Unreachable',
+      pathString: bfsFound ? formatPath(lastBfs.pathNodes) : 'Target unreachable',
       totalCost: bfsFound ? (lastBfs.totalCost ?? null) : null,
       hopCount: bfsFound ? (lastBfs.hopCount ?? (lastBfs.pathNodes.length > 0 ? lastBfs.pathNodes.length - 1 : null)) : null,
       visitedCount: lastBfs ? new Set(bfsSnapshots.flatMap((s) => s.visitedNodes)).size : 0,
       stepsCount: bfsSnapshots.length,
       timeComplexity: ALGORITHMS_METADATA.bfs.timeComplexity.worst,
       spaceComplexity: ALGORITHMS_METADATA.bfs.spaceComplexity,
-      guarantee: 'Guarantees MINIMUM HOPS. Disregards numeric edge weights.',
-      status: lastBfs?.status || 'unreachable',
     };
 
-    // Dijkstra
     const lastDijkstra = dijkstraSnapshots[dijkstraSnapshots.length - 1];
     const dijkstraFound = lastDijkstra?.status === 'found';
     const dijkstra: BenchmarkResult = {
       id: 'dijkstra',
       name: ALGORITHMS_METADATA.dijkstra.name,
       pathFound: dijkstraFound,
-      pathString: dijkstraFound ? formatPath(lastDijkstra.pathNodes) : 'Target Unreachable',
+      pathString: dijkstraFound ? formatPath(lastDijkstra.pathNodes) : 'Target unreachable',
       totalCost: dijkstraFound ? (lastDijkstra.totalCost ?? null) : null,
       hopCount: dijkstraFound ? (lastDijkstra.hopCount ?? (lastDijkstra.pathNodes.length > 0 ? lastDijkstra.pathNodes.length - 1 : null)) : null,
       visitedCount: lastDijkstra ? new Set(dijkstraSnapshots.flatMap((s) => s.visitedNodes)).size : 0,
       stepsCount: dijkstraSnapshots.length,
       timeComplexity: ALGORITHMS_METADATA.dijkstra.timeComplexity.worst,
       spaceComplexity: ALGORITHMS_METADATA.dijkstra.spaceComplexity,
-      guarantee: 'Guarantees MINIMUM TOTAL WEIGHT for non-negative graphs (w ≥ 0).',
-      status: lastDijkstra?.status || 'unreachable',
     };
 
     return { bfs, dijkstra };
   }, [currentPreset, bfsSnapshots, dijkstraSnapshots]);
 
+  const cleanNodeLabel = (id: string, label?: string) => {
+    return (label || id).replace(/^node-/, '');
+  };
+
+  const metricRows = [
+    {
+      label: 'Path',
+      bfs: results.bfs.pathString,
+      dijkstra: results.dijkstra.pathString,
+      mono: true,
+      highlight: true,
+    },
+    {
+      label: 'Hops',
+      bfs: results.bfs.hopCount !== null ? `${results.bfs.hopCount}` : '—',
+      dijkstra: results.dijkstra.hopCount !== null ? `${results.dijkstra.hopCount}` : '—',
+      mono: true,
+    },
+    {
+      label: 'Cost',
+      bfs: results.bfs.totalCost !== null ? `${results.bfs.totalCost}` : '—',
+      dijkstra: results.dijkstra.totalCost !== null ? `${results.dijkstra.totalCost}` : '—',
+      mono: true,
+    },
+    {
+      label: 'Explored vertices',
+      bfs: `${results.bfs.visitedCount}`,
+      dijkstra: `${results.dijkstra.visitedCount}`,
+      mono: true,
+    },
+    {
+      label: 'Steps',
+      bfs: `${results.bfs.stepsCount}`,
+      dijkstra: `${results.dijkstra.stepsCount}`,
+      mono: true,
+    },
+    {
+      label: 'Time complexity',
+      bfs: results.bfs.timeComplexity,
+      dijkstra: results.dijkstra.timeComplexity,
+      mono: true,
+    },
+    {
+      label: 'Space complexity',
+      bfs: results.bfs.spaceComplexity,
+      dijkstra: results.dijkstra.spaceComplexity,
+      mono: true,
+    },
+  ];
+
   return (
     <div
-      className="min-h-[calc(100vh-68px)] overflow-y-auto px-6 py-12"
+      className="min-h-[calc(100vh-64px)] overflow-y-auto px-6 py-12"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
       }}
     >
-      <div className="max-w-5xl mx-auto space-y-10">
+      <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="max-w-2xl">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-mono font-medium mb-4 border"
-            style={{
-              backgroundColor: 'var(--surface)',
-              borderColor: 'var(--border-strong)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            {isLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--accent)' }} />
-            ) : (
-              <GitCompare className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-            )}
-            <span>C++ Engine Dual Execution Benchmark</span>
-          </div>
-
+        <div>
           <h1
             className="text-3xl sm:text-4xl font-bold tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
-            BFS vs. Dijkstra Comparison
+            Algorithm Comparison
           </h1>
           <p
-            className="mt-2 text-base leading-relaxed"
+            className="mt-2 text-base"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Both algorithms execute simultaneously on the identical graph topology inside native WebAssembly. Observe the structural differences between hop-optimality and weight-optimality.
+            Compare Breadth-First Search and Dijkstra’s Algorithm side by side on identical graph topologies.
           </p>
         </div>
 
-        {/* Shared Graph Configuration Bar */}
+        {/* Graph Selection Controls */}
         <div
-          className="p-5 rounded-lg border"
-          style={{
-            backgroundColor: 'var(--surface)',
-            borderColor: 'var(--border)',
-          }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label
-                className="block text-xs font-mono font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Benchmark Graph Topology
-              </label>
-              <select
-                value={selectedPresetId}
-                onChange={(e) => handlePresetChange(e.target.value)}
-                aria-label="Benchmark Graph Topology"
-                className="w-full px-3 py-2.5 rounded-md border text-sm font-semibold cursor-pointer focus-visible:outline-none min-h-[44px]"
-                style={{
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                {PRESET_GRAPHS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                className="block text-xs font-mono font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Source Vertex (S)
-              </label>
-              <select
-                value={sourceId}
-                onChange={(e) => setSourceId(e.target.value)}
-                aria-label="Source Vertex"
-                className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none min-h-[44px]"
-                style={{
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                {currentPreset.nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    Vertex {n.data.label || n.id}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label
-                className="block text-xs font-mono font-bold uppercase tracking-wider mb-1.5"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Destination Vertex (T)
-              </label>
-              <select
-                value={targetId}
-                onChange={(e) => setTargetId(e.target.value)}
-                aria-label="Destination Vertex"
-                className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none min-h-[44px]"
-                style={{
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--border-strong)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                {currentPreset.nodes.map((n) => (
-                  <option key={n.id} value={n.id}>
-                    Vertex {n.data.label || n.id}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Structured Side-by-Side Comparison Table */}
-        <div
-          className="rounded-lg border overflow-hidden"
-          style={{
-            backgroundColor: 'var(--surface)',
-            borderColor: 'var(--border-strong)',
-          }}
-        >
-          {/* Column Headers */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b"
-            style={{
-              backgroundColor: 'var(--background-secondary)',
-              borderColor: 'var(--border-strong)',
-            }}
-          >
-            <div className="p-6">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--text-muted)' }}>
-                Algorithm 01
-              </span>
-              <h2 className="text-2xl font-bold tracking-tight mt-1" style={{ color: 'var(--text-primary)' }}>
-                {results.bfs.name}
-              </h2>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                FIFO Queue • Unweighted Level-Order Traversal
-              </p>
-            </div>
-
-            <div className="p-6">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--text-muted)' }}>
-                Algorithm 02
-              </span>
-              <h2 className="text-2xl font-bold tracking-tight mt-1" style={{ color: 'var(--text-primary)' }}>
-                {results.dijkstra.name}
-              </h2>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Binary Min-Heap • Greedy Edge Relaxation
-              </p>
-            </div>
-          </div>
-
-          {/* Metric Row: Resulting Path */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="p-5 space-y-1">
-              <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                Resulting Traversal Path
-              </div>
-              <div className="font-mono text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                {results.bfs.pathString}
-              </div>
-            </div>
-            <div className="p-5 space-y-1">
-              <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                Resulting Traversal Path
-              </div>
-              <div className="font-mono text-base font-bold" style={{ color: 'var(--accent)' }}>
-                {results.dijkstra.pathString}
-              </div>
-            </div>
-          </div>
-
-          {/* Metric Row: Numeric Cost & Hop Count */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="p-5 grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                  Total Numeric Cost
-                </div>
-                <div className="font-mono text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
-                  {results.bfs.totalCost !== null ? results.bfs.totalCost : 'N/A'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                  Hop Count
-                </div>
-                <div className="font-mono text-2xl font-bold mt-1" style={{ color: 'var(--secondary-accent)' }}>
-                  {results.bfs.hopCount !== null ? `${results.bfs.hopCount} hops` : 'N/A'}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                  Total Numeric Cost
-                </div>
-                <div className="font-mono text-2xl font-bold mt-1" style={{ color: 'var(--success)' }}>
-                  {results.dijkstra.totalCost !== null ? results.dijkstra.totalCost : 'N/A'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-                  Hop Count
-                </div>
-                <div className="font-mono text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
-                  {results.dijkstra.hopCount !== null ? `${results.dijkstra.hopCount} hops` : 'N/A'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Metric Row: Explored Vertices & C++ WASM Steps */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b" style={{ borderColor: 'var(--border)' }}>
-            <div className="p-5 grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="font-mono uppercase text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  Explored Nodes:
-                </span>
-                <span className="font-mono font-bold block text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  {results.bfs.visitedCount} vertices
-                </span>
-              </div>
-              <div>
-                <span className="font-mono uppercase text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  WASM Snapshots:
-                </span>
-                <span className="font-mono font-bold block text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  {results.bfs.stepsCount} steps
-                </span>
-              </div>
-            </div>
-
-            <div className="p-5 grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="font-mono uppercase text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  Explored Nodes:
-                </span>
-                <span className="font-mono font-bold block text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  {results.dijkstra.visitedCount} vertices
-                </span>
-              </div>
-              <div>
-                <span className="font-mono uppercase text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  WASM Snapshots:
-                </span>
-                <span className="font-mono font-bold block text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  {results.dijkstra.stepsCount} steps
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Metric Row: Complexities */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b text-xs font-mono" style={{ borderColor: 'var(--border)' }}>
-            <div className="p-5 space-y-2">
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-muted)' }}>Time Complexity:</span>
-                <span className="font-bold">{results.bfs.timeComplexity}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-muted)' }}>Space Complexity:</span>
-                <span className="font-bold">{results.bfs.spaceComplexity}</span>
-              </div>
-            </div>
-
-            <div className="p-5 space-y-2">
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-muted)' }}>Time Complexity:</span>
-                <span className="font-bold">{results.dijkstra.timeComplexity}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-muted)' }}>Space Complexity:</span>
-                <span className="font-bold">{results.dijkstra.spaceComplexity}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Metric Row: Theoretical Guarantee */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x text-xs leading-relaxed" style={{ borderColor: 'var(--border)' }}>
-            <div className="p-5" style={{ backgroundColor: 'var(--surface-elevated)' }}>
-              <div className="flex items-center gap-1.5 font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--secondary-accent)' }} />
-                <span>BFS Guarantee</span>
-              </div>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                {results.bfs.guarantee}
-              </p>
-            </div>
-
-            <div className="p-5" style={{ backgroundColor: 'var(--surface-elevated)' }}>
-              <div className="flex items-center gap-1.5 font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--success)' }} />
-                <span>Dijkstra Guarantee</span>
-              </div>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                {results.dijkstra.guarantee}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Clear Educational Takeaway Box */}
-        <div
-          className="p-8 rounded-lg border space-y-6"
+          className="p-4 rounded-lg border grid grid-cols-1 sm:grid-cols-3 gap-4"
           style={{
             backgroundColor: 'var(--surface)',
             borderColor: 'var(--border)',
           }}
         >
           <div>
-            <span
-              className="text-xs font-mono font-bold uppercase tracking-wider block mb-1"
-              style={{ color: 'var(--accent)' }}
+            <label
+              htmlFor="compare-preset"
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              Core Educational Axiom
-            </span>
-            <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              BFS minimizes hops. Dijkstra minimizes total weight.
-            </h2>
+              Graph preset
+            </label>
+            <select
+              id="compare-preset"
+              value={selectedPresetId}
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none min-h-[40px]"
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {PRESET_GRAPHS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Small Visual Tradeoff Example */}
+          <div>
+            <label
+              htmlFor="compare-source"
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Start vertex
+            </label>
+            <select
+              id="compare-source"
+              value={sourceId}
+              onChange={(e) => setSourceId(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none min-h-[40px]"
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {currentPreset.nodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  Vertex {cleanNodeLabel(n.id, n.data.label)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="compare-target"
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Destination
+            </label>
+            <select
+              id="compare-target"
+              value={targetId}
+              onChange={(e) => setTargetId(e.target.value)}
+              className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none min-h-[40px]"
+              style={{
+                backgroundColor: 'var(--background)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {currentPreset.nodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  Vertex {cleanNodeLabel(n.id, n.data.label)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Clean Two-Column Comparison Table with Aligned Rows */}
+        <div
+          className="rounded-lg border overflow-hidden"
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          {/* Table Headers */}
           <div
-            className="p-5 rounded-md border text-sm"
+            className="grid grid-cols-3 border-b text-sm"
             style={{
-              backgroundColor: 'var(--background)',
-              borderColor: 'var(--border-strong)',
+              backgroundColor: 'var(--background-secondary)',
+              borderColor: 'var(--border)',
             }}
           >
-            <div className="font-mono text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
-              Topological Tradeoff Case Study
+            <div className="p-4 font-medium" style={{ color: 'var(--text-muted)' }}>
+              Metric
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-2">
-              <div className="space-y-1">
-                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded border" style={{ borderColor: 'var(--secondary-accent)', color: 'var(--secondary-accent)' }}>
-                  Direct Path (1 hop)
-                </span>
-                <p className="font-mono text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
-                  A ⎯[weight 18]⎯→ D
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Chosen by BFS because hop count = 1, despite high cost of 18.
-                </p>
-              </div>
-
-              <div className="font-mono text-xl font-bold text-[var(--accent)] select-none">
-                VS
-              </div>
-
-              <div className="space-y-1">
-                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded border" style={{ borderColor: 'var(--success)', color: 'var(--success)' }}>
-                  Detour Path (3 hops)
-                </span>
-                <p className="font-mono text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
-                  A ⎯[2]⎯→ B ⎯[2]⎯→ C ⎯[3]⎯→ D
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Chosen by Dijkstra because cumulative cost = 7, despite taking 3 hops.
-                </p>
-              </div>
+            <div className="p-4 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Breadth-First Search
+            </div>
+            <div className="p-4 font-semibold flex items-center justify-between" style={{ color: 'var(--text-primary)' }}>
+              <span>Dijkstra’s Algorithm</span>
+              {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary-action)]" />}
             </div>
           </div>
 
-          <div className="flex items-start gap-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--active-step)' }} />
-            <p>
-              When edge weights represent physical distance, network latency, or financial tolls, Dijkstra is mathematically optimal. When edge weights are uniform or represent discrete transfer hops, BFS executes in linear O(V + E) time without heap overhead.
-            </p>
+          {/* Metric Rows */}
+          <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
+            {metricRows.map((row) => (
+              <div
+                key={row.label}
+                className="grid grid-cols-3 text-sm items-center hover:bg-[var(--surface-elevated)] transition-colors"
+              >
+                <div className="p-4 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  {row.label}
+                </div>
+                <div
+                  className={`p-4 text-sm ${row.mono ? 'font-mono' : ''}`}
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  {row.bfs}
+                </div>
+                <div
+                  className={`p-4 text-sm ${row.mono ? 'font-mono' : ''}`}
+                  style={{
+                    color: row.highlight ? 'var(--primary-action)' : 'var(--text-primary)',
+                    fontWeight: row.highlight ? 600 : 400,
+                  }}
+                >
+                  {row.dijkstra}
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Highlighted Primary Lesson */}
+        <div
+          className="p-6 rounded-lg border text-center space-y-2"
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <p className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            BFS minimizes the number of edges. Dijkstra minimizes total weight.
+          </p>
+          <p className="text-sm max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            BFS is optimal for unweighted graphs or uniform transmission networks. When edges carry variable weights such as distance, cost, or latency, Dijkstra guarantees the shortest path by cumulative weight.
+          </p>
         </div>
       </div>
     </div>

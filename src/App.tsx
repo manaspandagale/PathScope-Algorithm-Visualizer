@@ -40,16 +40,6 @@ export const App: React.FC = () => {
   const [algorithm, setAlgorithm] = useState<AlgorithmType>('dijkstra');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  const handleSelectPreset = (presetId: string) => {
-    const preset = PRESET_GRAPHS.find((p) => p.id === presetId);
-    if (!preset) return;
-    setNodes(preset.nodes);
-    setEdges(preset.edges);
-    setSourceId(preset.sourceId);
-    setTargetId(preset.targetId);
-    setSelectedNodeId(null);
-  };
-
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
@@ -63,11 +53,10 @@ export const App: React.FC = () => {
           color: 'var(--text-primary)',
         }}
       >
-        {/* Editorial Top Navigation */}
+        {/* Top Navigation */}
         <TopNav
           theme={theme}
           toggleTheme={toggleTheme}
-          onSelectPreset={handleSelectPreset}
         />
 
         {/* Primary Page Routes */}

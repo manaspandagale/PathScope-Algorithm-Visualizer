@@ -4,13 +4,11 @@ import type { AlgorithmType, GraphNodeData, GraphEdgeData } from '../../types/gr
 import { AlgorithmSelector } from './AlgorithmSelector';
 import { NodeSelector } from './NodeSelector';
 import { GraphTools } from './GraphTools';
-import { GraphStats } from './GraphStats';
 
 interface SidebarProps {
   algorithm: AlgorithmType;
   setAlgorithm: (algo: AlgorithmType) => void;
   nodes: Node<GraphNodeData>[];
-  edges: Edge<GraphEdgeData>[];
   setNodes: React.Dispatch<React.SetStateAction<Node<GraphNodeData>[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<GraphEdgeData>[]>>;
   sourceId: string;
@@ -18,14 +16,12 @@ interface SidebarProps {
   setSourceId: (id: string) => void;
   setTargetId: (id: string) => void;
   onResetVisualization: () => void;
-  isDirected?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   algorithm,
   setAlgorithm,
   nodes,
-  edges,
   setNodes,
   setEdges,
   sourceId,
@@ -33,17 +29,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setSourceId,
   setTargetId,
   onResetVisualization,
-  isDirected = false,
 }) => {
   return (
     <aside
-      className="w-full h-full flex flex-col overflow-y-auto p-5 space-y-6"
+      className="w-full h-full flex flex-col overflow-y-auto p-4 space-y-5"
       style={{
         backgroundColor: 'var(--surface)',
         color: 'var(--text-primary)',
       }}
     >
-      {/* Section 1: Algorithm Selection */}
+      {/* 1. Algorithms */}
       <section>
         <AlgorithmSelector
           selectedAlgorithm={algorithm}
@@ -53,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <hr style={{ borderColor: 'var(--border)' }} />
 
-      {/* Section 2: Source & Target */}
+      {/* 2. Start and Destination */}
       <section>
         <NodeSelector
           nodes={nodes}
@@ -66,27 +61,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       <hr style={{ borderColor: 'var(--border)' }} />
 
-      {/* Section 3: Presets & Graph Operations */}
+      {/* 3. Graph Configuration */}
       <section>
         <GraphTools
+          nodes={nodes}
           setNodes={setNodes}
           setEdges={setEdges}
+          sourceId={sourceId}
+          targetId={targetId}
           setSourceId={setSourceId}
           setTargetId={setTargetId}
           onResetVisualization={onResetVisualization}
         />
       </section>
-
-      <hr style={{ borderColor: 'var(--border)' }} />
-
-      {/* Section 4: Topology Statistics */}
-      <section>
-        <GraphStats
-          nodeCount={nodes.length}
-          edgeCount={edges.length}
-          isDirected={isDirected}
-        />
-      </section>
     </aside>
   );
 };
+
+export default Sidebar;

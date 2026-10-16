@@ -2,19 +2,25 @@ import React from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import type { GraphNodeData, GraphEdgeData } from '../../types/graph';
 import { PRESET_GRAPHS } from '../../data/presetGraphs';
-import { RotateCcw, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Trash2 } from 'lucide-react';
 
 interface GraphToolsProps {
+  nodes: Node<GraphNodeData>[];
   setNodes: React.Dispatch<React.SetStateAction<Node<GraphNodeData>[]>>;
   setEdges: React.Dispatch<React.SetStateAction<Edge<GraphEdgeData>[]>>;
+  sourceId: string;
+  targetId: string;
   setSourceId: (id: string) => void;
   setTargetId: (id: string) => void;
   onResetVisualization: () => void;
 }
 
 export const GraphTools: React.FC<GraphToolsProps> = ({
+  nodes,
   setNodes,
   setEdges,
+  sourceId,
+  targetId,
   setSourceId,
   setTargetId,
   onResetVisualization,
@@ -30,6 +36,41 @@ export const GraphTools: React.FC<GraphToolsProps> = ({
     onResetVisualization();
   };
 
+  const handleAddVertex = () => {
+    const existingLabels = new Set(nodes.map((n) => n.data.label));
+    let nextLabel = 'A';
+    for (let i = 0; i < 26; i++) {
+      const char = String.fromCharCode(65 + i);
+      if (!existingLabels.has(char)) {
+        nextLabel = char;
+        break;
+      }
+    }
+    if (existingLabels.has(nextLabel)) {
+      nextLabel = `V${nodes.length + 1}`;
+    }
+
+    const newNodeId = `node-${Date.now()}`;
+    const x = 120 + ((nodes.length * 80) % 480);
+    const y = 100 + ((nodes.length * 60) % 260);
+
+    const newNode: Node<GraphNodeData> = {
+      id: newNodeId,
+      type: 'customNode',
+      position: { x, y },
+      data: {
+        label: nextLabel,
+        isSource: nodes.length === 0,
+        isTarget: nodes.length === 1,
+        state: 'default',
+      },
+    };
+
+    setNodes((prev) => [...prev, newNode]);
+    if (!sourceId) setSourceId(newNodeId);
+    else if (!targetId && newNodeId !== sourceId) setTargetId(newNodeId);
+  };
+
   const handleClearGraph = () => {
     if (window.confirm('Clear all vertices and edges from the canvas?')) {
       setNodes([]);
@@ -42,16 +83,24 @@ export const GraphTools: React.FC<GraphToolsProps> = ({
 
   return (
     <div className="space-y-3">
-      <label className="block text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-        Graph Presets & Actions
-      </label>
+      <h3
+        className="text-xs font-semibold uppercase tracking-wider"
+        style={{ color: 'var(--text-secondary)' }}
+      >
+        Graph
+      </h3>
 
-      {/* Preset Graphs Picker */}
+      {/* Preset selector (The only one in the app) */}
       <div className="space-y-1">
-        <label className="block text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-          Load Example Scenario
+        <label
+          htmlFor="graph-preset-select"
+          className="block text-xs font-medium"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Preset graph
         </label>
         <select
+          id="graph-preset-select"
           defaultValue=""
           onChange={(e) => {
             if (e.target.value) {
@@ -59,11 +108,10 @@ export const GraphTools: React.FC<GraphToolsProps> = ({
               e.target.value = '';
             }
           }}
-          aria-label="Load preset scenario"
-          className="w-full px-3 py-2.5 rounded-md border text-xs font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+          className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
           style={{
             backgroundColor: 'var(--background)',
-            borderColor: 'var(--border-strong)',
+            borderColor: 'var(--border)',
             color: 'var(--text-primary)',
           }}
         >
@@ -85,36 +133,48 @@ export const GraphTools: React.FC<GraphToolsProps> = ({
         </select>
       </div>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
+      {/* Primary Add Vertex Button */}
+      <button
+        onClick={handleAddVertex}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
+        style={{
+          backgroundColor: 'var(--primary-subtle)',
+          border: '1px solid var(--border-strong)',
+          color: 'var(--primary-action)',
+        }}
+      >
+        <Plus className="w-4 h-4" />
+        <span>Add vertex</span>
+      </button>
+
+      {/* Action buttons */}
+      <div className="grid grid-cols-2 gap-2 pt-0.5">
         <button
           onClick={onResetVisualization}
-          title="Reset Algorithm State"
-          aria-label="Reset Visuals"
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md border text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+          title="Reset algorithm state"
+          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer min-h-[38px]"
           style={{
             backgroundColor: 'var(--background)',
-            borderColor: 'var(--border-strong)',
-            color: 'var(--text-primary)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
           }}
         >
-          <RotateCcw className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
-          <span>Reset</span>
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset view</span>
         </button>
 
         <button
           onClick={handleClearGraph}
-          title="Clear Canvas"
-          aria-label="Clear Graph"
-          className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md border text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+          title="Clear canvas"
+          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-colors cursor-pointer min-h-[38px]"
           style={{
-            backgroundColor: 'var(--danger-subtle)',
-            borderColor: 'var(--danger)',
-            color: 'var(--danger)',
+            backgroundColor: 'transparent',
+            borderColor: 'var(--error-subtle)',
+            color: 'var(--error)',
           }}
         >
           <Trash2 className="w-3.5 h-3.5" />
-          <span>Clear Canvas</span>
+          <span>Clear graph</span>
         </button>
       </div>
     </div>

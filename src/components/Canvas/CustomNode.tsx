@@ -10,40 +10,40 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
   const state = nodeData.state || 'default';
   const distance = nodeData.distance;
 
-  // Determine multi-channel state representations
+  // Clean accessible states
   let borderColor = 'var(--border-strong)';
   let borderWidth = '1.5px';
   let borderStyle = 'solid';
   let backgroundColor = 'var(--surface)';
-  let stateLabel = '';
+  let stateTag = '';
   let pulseClass = '';
 
   if (state === 'current') {
-    borderColor = 'var(--active-step)';
-    borderWidth = '2.5px';
-    stateLabel = 'ACTIVE';
+    borderColor = 'var(--active-state)';
+    borderWidth = '2px';
+    stateTag = 'Current';
     pulseClass = 'node-pulse-current';
     backgroundColor = 'var(--surface-elevated)';
   } else if (state === 'path') {
     borderColor = 'var(--success)';
-    borderWidth = '3px';
-    stateLabel = 'PATH';
+    borderWidth = '2.5px';
+    stateTag = 'Path';
     backgroundColor = 'var(--surface-elevated)';
-  } else if (state === 'visited') {
-    borderColor = 'var(--secondary-accent)';
-    borderWidth = '2px';
-    stateLabel = 'VISITED';
   } else if (state === 'frontier') {
-    borderColor = 'var(--accent)';
-    borderWidth = '2px';
+    borderColor = 'var(--primary-action)';
+    borderWidth = '1.5px';
     borderStyle = 'dashed';
-    stateLabel = 'FRONTIER';
+    stateTag = 'Frontier';
+  } else if (state === 'visited') {
+    borderColor = 'var(--border-strong)';
+    borderWidth = '1.5px';
+    stateTag = 'Visited';
   } else if (isSource) {
     borderColor = 'var(--success)';
-    borderWidth = '2.5px';
+    borderWidth = '2px';
   } else if (isTarget) {
-    borderColor = 'var(--danger)';
-    borderWidth = '2.5px';
+    borderColor = 'var(--error)';
+    borderWidth = '2px';
   }
 
   return (
@@ -57,24 +57,24 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         color: 'var(--text-primary)',
         boxShadow: selected ? '0 0 0 2px var(--focus-ring)' : 'none',
       }}
-      className={`relative min-w-[84px] px-3.5 py-2.5 transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
+      className={`relative min-w-[76px] px-3 py-2 transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
     >
-      {/* React Flow handles for edge connection */}
+      {/* Handles */}
       <Handle
         type="target"
         position={Position.Top}
-        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        className="!w-2.5 !h-2.5 !rounded-full !border !cursor-crosshair"
         style={{
-          backgroundColor: 'var(--accent)',
+          backgroundColor: 'var(--primary-action)',
           borderColor: 'var(--surface)',
         }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        className="!w-2.5 !h-2.5 !rounded-full !border !cursor-crosshair"
         style={{
-          backgroundColor: 'var(--accent)',
+          backgroundColor: 'var(--primary-action)',
           borderColor: 'var(--surface)',
         }}
       />
@@ -82,9 +82,9 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         type="target"
         position={Position.Left}
         id="left"
-        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        className="!w-2.5 !h-2.5 !rounded-full !border !cursor-crosshair"
         style={{
-          backgroundColor: 'var(--accent)',
+          backgroundColor: 'var(--primary-action)',
           borderColor: 'var(--surface)',
         }}
       />
@@ -92,53 +92,53 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         type="source"
         position={Position.Right}
         id="right"
-        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        className="!w-2.5 !h-2.5 !rounded-full !border !cursor-crosshair"
         style={{
-          backgroundColor: 'var(--accent)',
+          backgroundColor: 'var(--primary-action)',
           borderColor: 'var(--surface)',
         }}
       />
 
-      {/* Role badges: Source / Target */}
+      {/* Start / Destination clean indicator */}
       {(isSource || isTarget) && (
         <span
-          className="absolute -top-3 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded uppercase border"
+          className="absolute -top-2.5 px-1.5 py-0.2 text-[10px] font-sans font-semibold tracking-wide rounded uppercase border"
           style={{
-            backgroundColor: isSource ? 'var(--success)' : 'var(--danger)',
-            borderColor: isSource ? 'var(--success)' : 'var(--danger)',
+            backgroundColor: isSource ? 'var(--success)' : 'var(--error)',
+            borderColor: isSource ? 'var(--success)' : 'var(--error)',
             color: '#FFFFFF',
           }}
         >
-          {isSource ? 'SOURCE' : 'TARGET'}
+          {isSource ? 'Start' : 'Dest'}
         </span>
       )}
 
-      {/* Node label */}
+      {/* Node label in Inter Variable */}
       <span
-        className="font-bold text-base tracking-tight font-mono"
+        className="font-semibold text-base tracking-tight font-sans"
         style={{ color: 'var(--text-primary)' }}
       >
         {nodeData.label || id}
       </span>
 
-      {/* Accessible state label & distance badge */}
-      <div className="flex items-center gap-1.5 mt-1">
-        {stateLabel && !isSource && !isTarget && (
+      {/* Distance in JetBrains Mono Variable */}
+      <div className="flex items-center gap-1 mt-0.5">
+        {stateTag && !isSource && !isTarget && (
           <span
-            className="px-1.5 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded border"
+            className="px-1 py-0.2 text-[10px] font-sans font-medium rounded border"
             style={{
               backgroundColor: 'var(--background-secondary)',
               borderColor: 'var(--border)',
               color: 'var(--text-secondary)',
             }}
           >
-            {stateLabel}
+            {stateTag}
           </span>
         )}
 
         {distance !== undefined && distance !== null && (
-          <div
-            className="px-1.5 py-0.5 text-[11px] font-mono font-semibold rounded border"
+          <span
+            className="px-1 py-0.2 text-xs font-mono font-medium rounded border"
             style={{
               backgroundColor: 'var(--background)',
               borderColor: 'var(--border)',
@@ -146,7 +146,7 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
             }}
           >
             d: {distance >= 1e8 ? '∞' : distance}
-          </div>
+          </span>
         )}
       </div>
     </div>

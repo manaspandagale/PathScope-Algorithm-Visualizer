@@ -126,7 +126,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
 
   return (
     <div
-      className="flex-1 flex flex-col h-[calc(100vh-68px)] overflow-hidden relative select-none"
+      className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden relative select-none"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
@@ -135,32 +135,25 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
       {/* Validation Banner (e.g. Negative Weights in Dijkstra) */}
       {errorMessage && (
         <div
-          className="px-6 py-2.5 flex items-center justify-between text-xs font-medium border-b z-30"
+          className="px-6 py-2 flex items-center justify-between text-xs font-medium border-b z-30"
           style={{
-            backgroundColor: 'var(--danger-subtle)',
-            borderColor: 'var(--danger)',
-            color: 'var(--danger)',
+            backgroundColor: 'var(--error)',
+            color: '#FFFFFF',
           }}
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
-            <span className="font-semibold">{errorMessage}</span>
+            <span>{errorMessage}</span>
           </div>
-          <span
-            className="text-[11px] font-mono px-2 py-0.5 rounded border"
-            style={{
-              borderColor: 'var(--danger)',
-              backgroundColor: 'var(--surface)',
-            }}
-          >
-            C++ Engine Guard
+          <span className="text-xs font-mono opacity-80">
+            Validation check
           </span>
         </div>
       )}
 
       {/* Mobile Drawer Bar for Small Screens */}
       <div
-        className="flex xl:hidden items-center justify-between px-4 py-2 border-b text-xs"
+        className="flex lg:hidden items-center justify-between px-4 py-2 border-b text-xs shrink-0 z-20"
         style={{
           backgroundColor: 'var(--surface)',
           borderColor: 'var(--border)',
@@ -171,15 +164,15 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             setMobileConfigOpen(!mobileConfigOpen);
             setMobileInspectorOpen(false);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-medium cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileConfigOpen ? 'var(--background-secondary)' : 'var(--background)',
-            borderColor: 'var(--border-strong)',
+            borderColor: 'var(--border)',
             color: 'var(--text-primary)',
           }}
         >
-          <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-          <span>Configuration Rail</span>
+          <SlidersHorizontal className="w-4 h-4" />
+          <span>Graph controls</span>
         </button>
 
         <button
@@ -187,26 +180,37 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             setMobileInspectorOpen(!mobileInspectorOpen);
             setMobileConfigOpen(false);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-medium cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-2 rounded border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileInspectorOpen ? 'var(--background-secondary)' : 'var(--background)',
-            borderColor: 'var(--border-strong)',
+            borderColor: 'var(--border)',
             color: 'var(--text-primary)',
           }}
         >
-          <PanelRight className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-          <span>Inspector Tabs</span>
+          <PanelRight className="w-4 h-4" />
+          <span>Step inspector</span>
         </button>
       </div>
 
-      {/* Main Workbench: Left Rail + Center Canvas + Right Inspector */}
+      {/* Main Workbench: Left Rail (272px) + Center Canvas + Right Inspector (360px) */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Configuration Rail (Desktop: persistent 280px, Mobile: drawer) */}
+        {/* Backdrop for mobile drawer */}
+        {(mobileConfigOpen || mobileInspectorOpen) && (
+          <div
+            className="fixed inset-0 bg-black/30 z-30 lg:hidden"
+            onClick={() => {
+              setMobileConfigOpen(false);
+              setMobileInspectorOpen(false);
+            }}
+          />
+        )}
+
+        {/* Left Control Panel (Desktop: persistent 272px, Mobile: drawer) */}
         <div
           className={`
-            fixed xl:static top-[110px] xl:top-auto left-0 bottom-[76px] xl:bottom-auto z-30
-            w-80 xl:w-[280px] shrink-0 transition-transform duration-200
-            ${mobileConfigOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}
+            fixed lg:static top-0 lg:top-auto left-0 bottom-0 lg:bottom-auto z-40
+            w-[272px] shrink-0 transition-transform duration-200
+            ${mobileConfigOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
@@ -217,7 +221,6 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             algorithm={algorithm}
             setAlgorithm={setAlgorithm}
             nodes={nodes}
-            edges={edges}
             setNodes={setNodes}
             setEdges={setEdges}
             sourceId={sourceId}
@@ -225,7 +228,6 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             setSourceId={setSourceId}
             setTargetId={setTargetId}
             onResetVisualization={restart}
-            isDirected={false}
           />
         </div>
 
@@ -233,14 +235,14 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         <main className="flex-1 h-full relative overflow-hidden">
           {isLoadingWasm && (
             <div
-              className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-mono font-medium shadow-sm"
+              className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded border text-xs font-mono font-medium shadow-sm"
               style={{
                 backgroundColor: 'var(--surface-elevated)',
-                borderColor: 'var(--border-strong)',
+                borderColor: 'var(--border)',
                 color: 'var(--text-secondary)',
               }}
             >
-              <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--accent)' }} />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary-action)]" />
               <span>Computing in C++ WASM...</span>
             </div>
           )}
@@ -265,9 +267,9 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         {/* Right Inspector (Desktop: persistent 360px, Mobile: drawer) */}
         <div
           className={`
-            fixed xl:static top-[110px] xl:top-auto right-0 bottom-[76px] xl:bottom-auto z-30
-            w-96 xl:w-[360px] shrink-0 transition-transform duration-200
-            ${mobileInspectorOpen ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'}
+            fixed lg:static top-0 lg:top-auto right-0 bottom-0 lg:bottom-auto z-40
+            w-[360px] shrink-0 transition-transform duration-200
+            ${mobileInspectorOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
@@ -283,7 +285,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         </div>
       </div>
 
-      {/* Fixed Playback Dock */}
+      {/* Fixed Playback Dock (72px) */}
       <PlaybackBar
         currentStepIndex={currentStepIndex}
         totalSteps={totalSteps}

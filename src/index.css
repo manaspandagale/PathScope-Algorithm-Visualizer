@@ -1,33 +1,33 @@
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
-@import "@fontsource-variable/instrument-sans";
-@import "@fontsource/ibm-plex-mono";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 
 @layer base {
   :root {
-    /* LIGHT THEME — WARM BEIGE */
-    --background: #F3EEE4;
-    --background-secondary: #EAE2D5;
-    --surface: #FBF8F1;
-    --surface-elevated: #FFFDF8;
-    --text-primary: #211E1A;
-    --text-secondary: #625C53;
-    --text-muted: #7A7369;
-    --border: #D5CCBD;
-    --border-strong: #BFB4A4;
-    --accent: #C65F37;
-    --accent-hover: #A94B2A;
-    --accent-subtle: rgba(198, 95, 55, 0.12);
-    --secondary-accent: #3F735F;
-    --secondary-subtle: rgba(63, 115, 95, 0.12);
-    --active-step: #D18A24;
-    --active-step-subtle: rgba(209, 138, 36, 0.15);
-    --success: #39745C;
-    --success-subtle: rgba(57, 116, 92, 0.12);
-    --danger: #B8493F;
-    --danger-subtle: rgba(184, 73, 63, 0.12);
-    --canvas-grid: #D5CCBD;
-    --focus-ring: #C65F37;
+    /* LIGHT THEME — SOFT WARM-NEUTRAL */
+    --background: #F6F3EC;
+    --background-secondary: #EEE9DF;
+    --surface: #FFFCF7;
+    --surface-elevated: #FFFFFF;
+    --text-primary: #1D211C;
+    --text-secondary: #555C53;
+    --text-muted: #747A71;
+    --border: #D9D3C8;
+    --border-strong: #BEB8AD;
+    --primary-action: #386A55;
+    --primary-hover: #2D5946;
+    --primary-subtle: #E2EDE6;
+    --active-state: #C86742;
+    --active-subtle: rgba(200, 103, 66, 0.12);
+    --warning: #B47A22;
+    --warning-subtle: rgba(180, 122, 34, 0.12);
+    --success: #3D7B61;
+    --success-subtle: rgba(61, 123, 97, 0.12);
+    --error: #B64D45;
+    --error-subtle: rgba(182, 77, 69, 0.12);
+    --canvas-grid: #D9D3C8;
+    --focus-ring: #386A55;
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
@@ -35,48 +35,51 @@
 
   .dark {
     /* DARK THEME — TRUE NEUTRAL CHARCOAL */
-    --background: #11100E;
-    --background-secondary: #171512;
-    --surface: #1C1A17;
-    --surface-elevated: #24211D;
-    --text-primary: #F4EEE4;
-    --text-secondary: #C5BDB1;
-    --text-muted: #9E9589;
-    --border: #3A352E;
-    --border-strong: #514A40;
-    --accent: #E0794E;
-    --accent-hover: #F08A5D;
-    --accent-subtle: rgba(224, 121, 78, 0.15);
-    --secondary-accent: #70A087;
-    --secondary-subtle: rgba(112, 160, 135, 0.15);
-    --active-step: #E7A73E;
-    --active-step-subtle: rgba(231, 167, 62, 0.18);
-    --success: #6DB493;
-    --success-subtle: rgba(109, 180, 147, 0.15);
-    --danger: #E06C62;
-    --danger-subtle: rgba(224, 108, 98, 0.15);
-    --canvas-grid: #2A2622;
-    --focus-ring: #E0794E;
+    --background: #0F110F;
+    --background-secondary: #141714;
+    --surface: #191C19;
+    --surface-elevated: #202420;
+    --text-primary: #F3F1EA;
+    --text-secondary: #C7C9C1;
+    --text-muted: #989E96;
+    --border: #343A34;
+    --strong-border: #4B534B;
+    --border-strong: #4B534B;
+    --primary-action: #78AA90;
+    --primary-hover: #8BBAA1;
+    --primary-subtle: #213229;
+    --active-state: #E17A52;
+    --active-subtle: rgba(225, 122, 82, 0.15);
+    --warning: #D6A14B;
+    --warning-subtle: rgba(214, 161, 75, 0.15);
+    --success: #70AF8E;
+    --success-subtle: rgba(112, 175, 142, 0.15);
+    --error: #DE7169;
+    --error-subtle: rgba(222, 113, 105, 0.15);
+    --canvas-grid: #282E28;
+    --focus-ring: #78AA90;
   }
 
   body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    font-family: 'Instrument Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: var(--background);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    font-size: 16px;
+    line-height: 1.55;
+    transition: background-color 0.18s ease, color 0.18s ease;
   }
 
   code, pre, kbd, samp, .font-mono {
-    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   }
 }
 
-/* Custom minimal scrollbar */
+/* Minimal subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -109,9 +112,9 @@
 }
 
 /* Node pulse for active step */
-@keyframes active-node-pulse {
+@keyframes active-step-pulse {
   0% {
-    box-shadow: 0 0 0 0 var(--active-step-subtle);
+    box-shadow: 0 0 0 0 var(--active-subtle);
   }
   70% {
     box-shadow: 0 0 0 8px transparent;
@@ -122,7 +125,7 @@
 }
 
 .node-pulse-current {
-  animation: active-node-pulse 2s infinite ease-in-out;
+  animation: active-step-pulse 2s infinite ease-in-out;
 }
 
 /* Accessibility: Reduced motion */

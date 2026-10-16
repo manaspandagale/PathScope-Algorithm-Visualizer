@@ -5,7 +5,6 @@ import { StepExplanation } from './StepExplanation';
 import { PseudocodeViewer } from './PseudocodeViewer';
 import { DataStructureViewer } from './DataStructureViewer';
 import { ResultSummary } from './ResultSummary';
-import { MessageSquareText, Code2, Database, Award } from 'lucide-react';
 
 interface InfoPanelProps {
   algorithm: AlgorithmType;
@@ -25,11 +24,13 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   const metadata = ALGORITHMS_METADATA[algorithm];
   const [activeTab, setActiveTab] = useState<TabType>('explanation');
 
-  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'explanation', label: 'Explanation', icon: MessageSquareText },
-    { id: 'pseudocode', label: 'Pseudocode', icon: Code2 },
-    { id: 'data', label: 'Data', icon: Database },
-    { id: 'result', label: 'Result', icon: Award },
+  const subtitle = algorithm === 'dijkstra' ? 'Weighted shortest path' : 'Unweighted shortest path';
+
+  const tabs: { id: TabType; label: string }[] = [
+    { id: 'explanation', label: 'Explanation' },
+    { id: 'pseudocode', label: 'Pseudocode' },
+    { id: 'data', label: 'Data' },
+    { id: 'result', label: 'Result' },
   ];
 
   return (
@@ -40,40 +41,40 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
         color: 'var(--text-primary)',
       }}
     >
-      {/* Algorithm Header */}
+      {/* Simplified Algorithm Header */}
       <div
-        className="p-5 border-b space-y-2 shrink-0"
+        className="px-5 py-4 border-b flex items-center justify-between shrink-0"
         style={{ borderColor: 'var(--border)' }}
       >
-        <div className="flex items-center justify-between">
+        <div>
           <h2
-            className="text-base font-bold tracking-tight"
+            className="text-base font-semibold tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
             {metadata.name}
           </h2>
-          <span
-            className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded border"
-            style={{
-              backgroundColor: 'var(--background-secondary)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-secondary)',
-            }}
+          <p
+            className="text-xs"
+            style={{ color: 'var(--text-secondary)' }}
           >
-            {metadata.timeComplexity.worst}
-          </span>
+            {subtitle}
+          </p>
         </div>
-        <p
-          className="text-xs leading-relaxed"
-          style={{ color: 'var(--text-secondary)' }}
+        <span
+          className="text-xs font-mono font-medium px-2 py-0.5 rounded border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
+          }}
         >
-          {metadata.shortDescription}
-        </p>
+          {metadata.timeComplexity.worst}
+        </span>
       </div>
 
-      {/* 4-Tab Segmented Navigation */}
+      {/* 4 Clean, Readable Tabs with Simple Underline */}
       <div
-        className="px-3 pt-2.5 pb-2 border-b grid grid-cols-4 gap-1 shrink-0"
+        className="px-4 border-b flex items-center gap-1 shrink-0"
         style={{
           backgroundColor: 'var(--background-secondary)',
           borderColor: 'var(--border)',
@@ -81,20 +82,18 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
       >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none min-h-[36px]"
+              className="flex-1 py-2.5 text-center text-xs font-medium transition-colors cursor-pointer focus-visible:outline-none border-b-2"
               style={{
-                backgroundColor: isActive ? 'var(--surface-elevated)' : 'transparent',
-                border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
-                color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+                borderColor: isActive ? 'var(--primary-action)' : 'transparent',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: isActive ? 600 : 500,
               }}
             >
-              <Icon className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">{tab.label}</span>
+              {tab.label}
             </button>
           );
         })}

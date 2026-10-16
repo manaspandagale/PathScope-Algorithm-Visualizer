@@ -1,6 +1,5 @@
 import React from 'react';
 import type { StepSnapshot } from '../../types/graph';
-import { AlertCircle, CheckCircle2, PlayCircle, CornerDownRight } from 'lucide-react';
 
 interface StepExplanationProps {
   snapshot: StepSnapshot | null;
@@ -16,139 +15,99 @@ export const StepExplanation: React.FC<StepExplanationProps> = ({
   if (!snapshot) {
     return (
       <div
-        className="p-6 rounded-md border text-center space-y-2"
+        className="p-6 rounded-md border text-center space-y-1.5"
         style={{
-          backgroundColor: 'var(--surface-elevated)',
+          backgroundColor: 'var(--surface)',
           borderColor: 'var(--border)',
           color: 'var(--text-secondary)',
         }}
       >
-        <p className="text-sm font-medium">Ready to begin</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          Ready to begin
+        </p>
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          Click Play or Next Step in the playback dock to execute the C++ algorithm engine.
+          Use the playback controls below to start the visualizer and observe each step.
         </p>
       </div>
     );
   }
 
-  const getStatusBadge = () => {
+  const cleanLabel = (id?: string | null) => {
+    if (!id) return null;
+    return id.replace(/^node-/, '');
+  };
+
+  const humanizeExplanation = (text: string) => {
+    let clean = text.replace(/node-([A-Za-z0-9_]+)/g, '$1');
+    clean = clean.replace(/dist\['(.*?)'\]/g, 'distance of $1');
+    return clean;
+  };
+
+  const getStatusText = () => {
     switch (snapshot.status) {
       case 'found':
-        return (
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold border"
-            style={{
-              backgroundColor: 'var(--success-subtle)',
-              borderColor: 'var(--success)',
-              color: 'var(--success)',
-            }}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Path Discovered
-          </span>
-        );
+        return 'Shortest path found';
       case 'unreachable':
-        return (
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold border"
-            style={{
-              backgroundColor: 'var(--danger-subtle)',
-              borderColor: 'var(--danger)',
-              color: 'var(--danger)',
-            }}
-          >
-            <AlertCircle className="w-3.5 h-3.5" />
-            Unreachable
-          </span>
-        );
+        return 'Target unreachable';
       case 'running':
-        return (
-          <span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-bold border"
-            style={{
-              backgroundColor: 'var(--accent-subtle)',
-              borderColor: 'var(--accent)',
-              color: 'var(--accent)',
-            }}
-          >
-            <PlayCircle className="w-3.5 h-3.5" />
-            Active Step
-          </span>
-        );
+        return 'In progress';
       default:
-        return (
-          <span
-            className="px-2 py-0.5 rounded text-xs font-mono font-medium border"
-            style={{
-              backgroundColor: 'var(--background-secondary)',
-              borderColor: 'var(--border)',
-              color: 'var(--text-muted)',
-            }}
-          >
-            Initialization
-          </span>
-        );
+        return 'Initialized';
     }
   };
 
+  const activeVertexLabel = cleanLabel(snapshot.currentNode);
+  const edgeSourceLabel = cleanLabel(snapshot.currentEdge?.source);
+  const edgeTargetLabel = cleanLabel(snapshot.currentEdge?.target);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 text-sm">
       {/* Step Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border)' }}>
         <span
-          className="font-mono text-sm font-bold"
-          style={{ color: 'var(--text-primary)' }}
+          className="font-medium text-xs uppercase tracking-wide"
+          style={{ color: 'var(--text-muted)' }}
         >
-          Step {currentStepIndex + 1}
-          <span style={{ color: 'var(--text-muted)' }}> of {totalSteps}</span>
+          Step {currentStepIndex + 1} of {totalSteps}
         </span>
-        {getStatusBadge()}
+        <span
+          className="text-xs font-medium px-2 py-0.5 rounded border"
+          style={{
+            backgroundColor: snapshot.status === 'found' ? 'var(--primary-subtle)' : 'var(--background)',
+            borderColor: snapshot.status === 'found' ? 'var(--primary-action)' : 'var(--border)',
+            color: snapshot.status === 'found' ? 'var(--primary-action)' : 'var(--text-secondary)',
+          }}
+        >
+          {getStatusText()}
+        </span>
       </div>
 
-      {/* Primary Narrative Explanation Box */}
+      {/* Primary Narrative Explanation */}
       <div
         className="p-4 rounded-md border text-sm leading-relaxed"
         style={{
           backgroundColor: 'var(--surface-elevated)',
-          borderColor: 'var(--border-strong)',
+          borderColor: 'var(--border)',
           color: 'var(--text-primary)',
         }}
       >
-        <p className="font-medium">{snapshot.explanation}</p>
+        <p>{humanizeExplanation(snapshot.explanation)}</p>
       </div>
 
-      {/* Focus Inspection: Current Vertex & Edge */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div
-          className="p-3 rounded-md border"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-          }}
-        >
-          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-            Active Vertex (u)
-          </div>
-          <div className="font-mono text-sm font-bold mt-0.5" style={{ color: 'var(--accent)' }}>
-            {snapshot.currentNode ? `Vertex ${snapshot.currentNode}` : 'None'}
-          </div>
+      {/* Definition Rows for Current State */}
+      <div className="space-y-2.5 pt-1">
+        <div className="flex items-center justify-between py-2 border-b text-xs" style={{ borderColor: 'var(--border)' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Current vertex</span>
+          <span className="font-medium" style={{ color: activeVertexLabel ? 'var(--active-step)' : 'var(--text-muted)' }}>
+            {activeVertexLabel ? `Vertex ${activeVertexLabel}` : 'None'}
+          </span>
         </div>
 
-        <div
-          className="p-3 rounded-md border"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-          }}
-        >
-          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-            Inspected Edge (u, v)
-          </div>
-          <div className="font-mono text-sm font-bold mt-0.5" style={{ color: 'var(--secondary-accent)' }}>
-            {snapshot.currentEdge
-              ? `(${snapshot.currentEdge.source} ↔ ${snapshot.currentEdge.target})`
-              : 'None'}
-          </div>
+        <div className="flex items-center justify-between py-2 border-b text-xs" style={{ borderColor: 'var(--border)' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>Current edge</span>
+          <span className="font-mono font-medium" style={{ color: edgeSourceLabel ? 'var(--primary-action)' : 'var(--text-muted)' }}>
+            {edgeSourceLabel && edgeTargetLabel ? `(${edgeSourceLabel}, ${edgeTargetLabel})` : 'None'}
+          </span>
         </div>
       </div>
 
@@ -156,24 +115,23 @@ export const StepExplanation: React.FC<StepExplanationProps> = ({
       {snapshot.traversalOrder.length > 0 && (
         <div className="pt-2">
           <div
-            className="flex items-center gap-1 text-xs font-mono font-bold uppercase tracking-wider mb-2"
+            className="text-xs font-medium mb-2"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <CornerDownRight className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-            <span>Visited Order Log ({snapshot.traversalOrder.length})</span>
+            Exploration order ({snapshot.traversalOrder.length})
           </div>
           <div className="flex flex-wrap gap-1.5">
             {snapshot.traversalOrder.map((nodeId, idx) => (
               <span
                 key={`${nodeId}-${idx}`}
-                className="px-2 py-0.5 text-xs font-mono font-semibold rounded border"
+                className="px-2 py-0.5 text-xs font-mono rounded border"
                 style={{
                   backgroundColor: 'var(--background)',
-                  borderColor: 'var(--border-strong)',
+                  borderColor: 'var(--border)',
                   color: 'var(--text-primary)',
                 }}
               >
-                {nodeId}
+                {cleanLabel(nodeId)}
               </span>
             ))}
           </div>

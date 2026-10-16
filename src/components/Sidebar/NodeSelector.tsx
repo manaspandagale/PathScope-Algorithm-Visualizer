@@ -27,16 +27,19 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-secondary)]">
-          Routing Termini
-        </label>
+        <h3
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Start and destination
+        </h3>
         {nodes.length >= 2 && (
           <button
             onClick={handleSwap}
-            title="Swap Source and Destination"
-            aria-label="Swap Source and Destination"
+            title="Swap start and destination"
+            aria-label="Swap start and destination"
             className="flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors px-2 py-1 rounded hover:bg-[var(--background-secondary)]"
-            style={{ color: 'var(--accent)' }}
+            style={{ color: 'var(--primary-action)' }}
           >
             <ArrowLeftRight className="w-3.5 h-3.5" />
             <span>Swap</span>
@@ -44,24 +47,28 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
         )}
       </div>
 
-      <div className="space-y-2.5">
-        {/* Source Picker */}
+      <div className="space-y-2">
+        {/* Start vertex */}
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-            Source Vertex (S)
+          <label
+            htmlFor="start-vertex-select"
+            className="block text-xs font-medium mb-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Start vertex
           </label>
           <select
+            id="start-vertex-select"
             value={sourceId}
             onChange={(e) => setSourceId(e.target.value)}
-            aria-label="Source Vertex"
-            className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+            className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
             style={{
               backgroundColor: 'var(--background)',
-              borderColor: 'var(--border-strong)',
+              borderColor: 'var(--border)',
               color: 'var(--text-primary)',
             }}
           >
-            {nodes.length === 0 && <option value="">No nodes available</option>}
+            {nodes.length === 0 && <option value="">No vertices</option>}
             {nodes.map((node) => (
               <option key={node.id} value={node.id}>
                 Vertex {node.data.label || node.id}
@@ -70,23 +77,27 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
           </select>
         </div>
 
-        {/* Target Picker */}
+        {/* Destination vertex */}
         <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
-            Destination Vertex (T)
+          <label
+            htmlFor="destination-vertex-select"
+            className="block text-xs font-medium mb-1"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Destination
           </label>
           <select
+            id="destination-vertex-select"
             value={targetId}
             onChange={(e) => setTargetId(e.target.value)}
-            aria-label="Destination Vertex"
-            className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+            className="w-full px-3 py-2 rounded-md border text-sm font-medium cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[40px]"
             style={{
               backgroundColor: 'var(--background)',
-              borderColor: 'var(--border-strong)',
+              borderColor: 'var(--border)',
               color: 'var(--text-primary)',
             }}
           >
-            {nodes.length === 0 && <option value="">No nodes available</option>}
+            {nodes.length === 0 && <option value="">No vertices</option>}
             {nodes.map((node) => (
               <option key={node.id} value={node.id}>
                 Vertex {node.data.label || node.id}
@@ -98,14 +109,14 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
 
       {sourceId && targetId && sourceId === targetId && (
         <p
-          className="text-xs p-2.5 rounded border"
+          className="text-xs p-2 rounded border"
           style={{
-            backgroundColor: 'var(--active-step-subtle)',
-            borderColor: 'var(--active-step)',
-            color: 'var(--active-step)',
+            backgroundColor: 'var(--warning-subtle)',
+            borderColor: 'var(--warning)',
+            color: 'var(--warning)',
           }}
         >
-          Notice: Source and Destination are identical (trivial 0-cost path).
+          Start and destination are the same vertex (path cost is 0).
         </p>
       )}
     </div>

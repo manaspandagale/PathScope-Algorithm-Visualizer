@@ -33,24 +33,24 @@ export const CustomEdge = memo(({
   const state = data?.state || 'default';
 
   let strokeColor = 'var(--border-strong)';
-  let strokeWidth = 2;
+  let strokeWidth = 1.75;
   let strokeDasharray = '';
 
   if (state === 'path') {
     strokeColor = 'var(--success)';
-    strokeWidth = 3.5;
-  } else if (state === 'current') {
-    strokeColor = 'var(--active-step)';
     strokeWidth = 3;
+  } else if (state === 'current') {
+    strokeColor = 'var(--active-state)';
+    strokeWidth = 2.5;
     strokeDasharray = '5 5';
   } else if (state === 'visited') {
-    strokeColor = 'var(--secondary-accent)';
-    strokeWidth = 2.5;
+    strokeColor = 'var(--border-strong)';
+    strokeWidth = 2;
   }
 
   if (selected) {
-    strokeColor = 'var(--accent)';
-    strokeWidth = 3;
+    strokeColor = 'var(--primary-action)';
+    strokeWidth = 2.5;
   }
 
   const handleWeightClick = (e: React.MouseEvent) => {
@@ -73,7 +73,7 @@ export const CustomEdge = memo(({
           stroke: strokeColor,
           strokeWidth,
           strokeDasharray,
-          transition: 'stroke 0.2s, stroke-width 0.2s',
+          transition: 'stroke 0.15s, stroke-width 0.15s',
         }}
       />
       <EdgeLabelRenderer>
@@ -88,20 +88,20 @@ export const CustomEdge = memo(({
           <button
             type="button"
             onClick={handleWeightClick}
-            title="Click to edit edge weight (cost)"
+            title="Click to edit weight"
             aria-label={`Edge weight ${weight}. Click to edit.`}
-            className="px-2 py-0.5 text-xs font-mono font-bold rounded border transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+            className="px-2 py-0.5 text-xs font-mono font-medium rounded border transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
             style={{
               backgroundColor: 'var(--surface-elevated)',
               borderColor: state === 'path'
                 ? 'var(--success)'
                 : state === 'current'
-                ? 'var(--active-step)'
-                : 'var(--border-strong)',
+                ? 'var(--active-state)'
+                : 'var(--border)',
               color: state === 'path'
                 ? 'var(--success)'
                 : state === 'current'
-                ? 'var(--active-step)'
+                ? 'var(--active-state)'
                 : 'var(--text-primary)',
             }}
           >

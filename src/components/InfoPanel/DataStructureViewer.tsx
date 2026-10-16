@@ -1,6 +1,5 @@
 import React from 'react';
 import type { StepSnapshot, PriorityQueueItem } from '../../types/graph';
-import { Database, Binary, ListOrdered, Table2 } from 'lucide-react';
 
 interface DataStructureViewerProps {
   snapshot: StepSnapshot | null;
@@ -27,82 +26,79 @@ export const DataStructureViewer: React.FC<DataStructureViewerProps> = ({
   const { dataStructure, distances, predecessors, visitedNodes } = snapshot;
   const isBfs = dataStructure.type === 'queue';
 
+  const cleanLabel = (id?: string | null) => {
+    if (!id) return '';
+    return id.replace(/^node-/, '');
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 text-xs">
       {/* 1. Primary Container: FIFO Queue or Min-Heap Priority Queue */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-            {isBfs ? (
-              <Database className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-            ) : (
-              <Binary className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-            )}
-            <span>
-              {isBfs ? 'FIFO Queue (BFS Order)' : 'Binary Min-Heap (Dijkstra)'}
-            </span>
-          </div>
+          <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+            {isBfs ? 'Queue' : 'Priority queue'}
+          </span>
           <span
-            className="text-xs font-mono px-2 py-0.5 rounded border"
+            className="font-mono text-xs px-2 py-0.5 rounded border"
             style={{
-              backgroundColor: 'var(--background-secondary)',
+              backgroundColor: 'var(--background)',
               borderColor: 'var(--border)',
               color: 'var(--text-secondary)',
             }}
           >
-            {dataStructure.items.length} {dataStructure.items.length === 1 ? 'element' : 'elements'}
+            {dataStructure.items.length} {dataStructure.items.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 
-        <div className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
-          {isBfs ? 'Front (Next to dequeue) → Rear' : 'Root (Minimum tentative distance) → Leaves'}
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          {isBfs ? 'Front (next to dequeue) → Rear' : 'Root (minimum tentative distance) → Leaves'}
         </div>
 
         {dataStructure.items.length === 0 ? (
           <div
-            className="text-center py-3 text-xs font-mono italic rounded-md border"
+            className="text-center py-3 text-xs italic rounded-md border"
             style={{
               backgroundColor: 'var(--background)',
               borderColor: 'var(--border)',
               color: 'var(--text-muted)',
             }}
           >
-            Queue is empty
+            Empty
           </div>
         ) : (
           <div
             className="flex flex-wrap gap-2 p-2.5 rounded-md border"
             style={{
               backgroundColor: 'var(--background)',
-              borderColor: 'var(--border-strong)',
+              borderColor: 'var(--border)',
             }}
           >
             {dataStructure.items.map((item, index) => {
               const isPq = 'priority' in item;
               const pqItem = item as PriorityQueueItem;
+              const label = cleanLabel(item.label || item.id);
 
               return (
                 <div
                   key={`${item.id}-${index}`}
-                  className="flex items-center gap-2 px-2.5 py-1 rounded border text-xs font-mono"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded border text-xs"
                   style={{
                     backgroundColor: 'var(--surface-elevated)',
-                    borderColor: index === 0 ? 'var(--accent)' : 'var(--border)',
-                    borderWidth: index === 0 ? '1.5px' : '1px',
+                    borderColor: index === 0 ? 'var(--primary-action)' : 'var(--border)',
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <span className="font-bold">Vertex {item.label}</span>
+                  <span className="font-medium">Vertex {label}</span>
                   {isPq && (
                     <span
-                      className="text-[11px] px-1.5 py-0.2 rounded font-semibold border"
+                      className="font-mono text-xs px-1 rounded"
                       style={{
-                        backgroundColor: 'var(--background-secondary)',
-                        borderColor: 'var(--border)',
-                        color: 'var(--accent)',
+                        backgroundColor: 'var(--primary-subtle)',
+                        color: 'var(--primary-action)',
                       }}
                     >
-                      dist: {pqItem.priority}
+                      d: {pqItem.priority}
                     </span>
                   )}
                 </div>
@@ -113,36 +109,40 @@ export const DataStructureViewer: React.FC<DataStructureViewerProps> = ({
       </div>
 
       {/* 2. Settled / Visited Set */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-          <ListOrdered className="w-3.5 h-3.5" style={{ color: 'var(--secondary-accent)' }} />
-          <span>Settled Vertices (Visited Set: {visitedNodes.length})</span>
+      <div className="space-y-2 pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+            Visited vertices
+          </span>
+          <span className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+            {visitedNodes.length}
+          </span>
         </div>
 
         {visitedNodes.length === 0 ? (
           <div
-            className="text-center py-2 text-xs font-mono italic rounded-md border"
+            className="text-center py-2 text-xs italic rounded-md border"
             style={{
               backgroundColor: 'var(--background)',
               borderColor: 'var(--border)',
               color: 'var(--text-muted)',
             }}
           >
-            None settled yet
+            None yet
           </div>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {visitedNodes.map((nodeId) => (
               <span
                 key={nodeId}
-                className="px-2 py-0.5 text-xs font-mono font-semibold rounded border"
+                className="px-2 py-0.5 text-xs font-mono rounded border"
                 style={{
-                  backgroundColor: 'var(--surface-elevated)',
-                  borderColor: 'var(--secondary-accent)',
-                  color: 'var(--secondary-accent)',
+                  backgroundColor: 'var(--background)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--text-primary)',
                 }}
               >
-                {nodeId}
+                {cleanLabel(nodeId)}
               </span>
             ))}
           </div>
@@ -152,10 +152,9 @@ export const DataStructureViewer: React.FC<DataStructureViewerProps> = ({
       {/* 3. Distance & Predecessor Map Table */}
       {Object.keys(distances).length > 0 && (
         <div className="space-y-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-            <Table2 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
-            <span>Distance & Predecessor Table</span>
-          </div>
+          <span className="font-semibold text-xs block" style={{ color: 'var(--text-primary)' }}>
+            Distance table
+          </span>
 
           <div
             className="overflow-x-auto rounded-md border"
@@ -164,9 +163,9 @@ export const DataStructureViewer: React.FC<DataStructureViewerProps> = ({
               borderColor: 'var(--border)',
             }}
           >
-            <table className="w-full text-xs text-left font-mono">
+            <table className="w-full text-xs text-left">
               <thead
-                className="text-[11px] uppercase border-b"
+                className="border-b"
                 style={{
                   backgroundColor: 'var(--background-secondary)',
                   borderColor: 'var(--border)',
@@ -174,30 +173,32 @@ export const DataStructureViewer: React.FC<DataStructureViewerProps> = ({
                 }}
               >
                 <tr>
-                  <th className="px-3 py-2 font-semibold">Vertex</th>
-                  <th className="px-3 py-2 font-semibold">Distance d(v)</th>
-                  <th className="px-3 py-2 font-semibold">Predecessor π(v)</th>
+                  <th className="px-3 py-2 font-medium">Vertex</th>
+                  <th className="px-3 py-2 font-medium">Distance</th>
+                  <th className="px-3 py-2 font-medium">Predecessor</th>
                 </tr>
               </thead>
               <tbody className="divide-y" style={{ borderColor: 'var(--border)' }}>
                 {Object.entries(distances).map(([nodeId, dist]) => {
                   const isCurrent = snapshot.currentNode === nodeId;
                   const distDisplay = dist >= 1e8 ? '∞' : dist;
+                  const label = cleanLabel(nodeId);
+                  const pred = cleanLabel(predecessors[nodeId]);
 
                   return (
                     <tr
                       key={nodeId}
                       style={{
-                        backgroundColor: isCurrent ? 'var(--active-step-subtle)' : 'transparent',
+                        backgroundColor: isCurrent ? 'var(--primary-subtle)' : 'transparent',
                         color: 'var(--text-primary)',
                       }}
                     >
-                      <td className="px-3 py-2 font-bold">{nodeId}</td>
-                      <td className="px-3 py-2 font-semibold" style={{ color: 'var(--accent)' }}>
+                      <td className="px-3 py-1.5 font-medium">{label}</td>
+                      <td className="px-3 py-1.5 font-mono font-semibold" style={{ color: 'var(--primary-action)' }}>
                         {distDisplay}
                       </td>
-                      <td className="px-3 py-2" style={{ color: 'var(--text-secondary)' }}>
-                        {predecessors[nodeId] ? `Vertex ${predecessors[nodeId]}` : '—'}
+                      <td className="px-3 py-1.5 font-mono" style={{ color: 'var(--text-secondary)' }}>
+                        {pred ? `Vertex ${pred}` : '—'}
                       </td>
                     </tr>
                   );

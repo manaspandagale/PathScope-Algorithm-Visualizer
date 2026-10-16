@@ -4,7 +4,6 @@ import {
   Controls,
   Background,
   BackgroundVariant,
-  MiniMap,
   applyNodeChanges,
   applyEdgeChanges,
   type OnNodesChange,
@@ -18,7 +17,7 @@ import { CustomNode } from './CustomNode';
 import { CustomEdge } from './CustomEdge';
 import { CanvasLegend } from './CanvasLegend';
 import type { GraphNodeData, GraphEdgeData, StepSnapshot } from '../../types/graph';
-import { Plus, Trash2, Flag, Target } from 'lucide-react';
+import { Trash2, Flag, Target } from 'lucide-react';
 
 interface GraphCanvasProps {
   nodes: Node<GraphNodeData>[];
@@ -145,7 +144,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
-      if (connection.source === connection.target) return; // Prevent self-loops in Phase 1
+      if (connection.source === connection.target) return;
 
       const newEdgeId = `e-${connection.source}-${connection.target}-${Date.now()}`;
       const newEdge: Edge<GraphEdgeData> = {
@@ -163,42 +162,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     },
     [setEdges]
   );
-
-  const handleAddNode = useCallback(() => {
-    const existingLabels = new Set(nodes.map((n) => n.data.label));
-    let nextLabel = 'A';
-    for (let i = 0; i < 26; i++) {
-      const char = String.fromCharCode(65 + i);
-      if (!existingLabels.has(char)) {
-        nextLabel = char;
-        break;
-      }
-    }
-    if (existingLabels.has(nextLabel)) {
-      nextLabel = `V${nodes.length + 1}`;
-    }
-
-    const newNodeId = `node-${Date.now()}`;
-    const x = 140 + ((nodes.length * 80) % 520);
-    const y = 140 + ((nodes.length * 60) % 320);
-
-    const newNode: Node<GraphNodeData> = {
-      id: newNodeId,
-      type: 'customNode',
-      position: { x, y },
-      data: {
-        label: nextLabel,
-        isSource: nodes.length === 0,
-        isTarget: nodes.length === 1,
-        state: 'default',
-      },
-    };
-
-    setNodes((prev) => [...prev, newNode]);
-
-    if (!sourceId) setSourceId(newNodeId);
-    else if (!targetId && newNodeId !== sourceId) setTargetId(newNodeId);
-  }, [nodes, sourceId, targetId, setNodes, setSourceId, setTargetId]);
 
   const handleDeleteSelected = useCallback(() => {
     if (!selectedNodeId) return;
@@ -226,74 +189,53 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     >
       <CanvasLegend />
 
-      {/* Floating Canvas Toolbar */}
-      <div
-        className="absolute top-4 right-4 z-10 flex items-center gap-2 p-1.5 rounded-md border shadow-sm"
-        style={{
-          backgroundColor: 'var(--surface-elevated)',
-          borderColor: 'var(--border-strong)',
-        }}
-      >
-        <button
-          onClick={handleAddNode}
-          title="Add Vertex"
-          aria-label="Add Vertex"
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-semibold cursor-pointer transition-colors focus-visible:outline-none min-h-[36px]"
+      {/* Subtle selection toolbar (only visible when a node is selected) */}
+      {selectedNodeId && (
+        <div
+          className="absolute top-4 right-4 z-10 flex items-center gap-1.5 p-1 rounded-md border shadow-sm text-xs"
           style={{
-            backgroundColor: 'var(--accent)',
-            color: '#FFFDF8',
+            backgroundColor: 'var(--surface-elevated)',
+            borderColor: 'var(--border)',
           }}
         >
-          <Plus className="w-4 h-4" />
-          <span>Add Vertex</span>
-        </button>
+          <button
+            onClick={() => setSourceId(selectedNodeId)}
+            title="Set selected vertex as start"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors"
+            style={{
+              backgroundColor: sourceId === selectedNodeId ? 'var(--primary-subtle)' : 'transparent',
+              color: sourceId === selectedNodeId ? 'var(--primary-action)' : 'var(--text-secondary)',
+            }}
+          >
+            <Flag className="w-3.5 h-3.5" />
+            <span>Set start</span>
+          </button>
 
-        {selectedNodeId && (
-          <>
-            <div className="h-5 w-[1px]" style={{ backgroundColor: 'var(--border)' }} />
-            <button
-              onClick={() => setSourceId(selectedNodeId)}
-              title="Set selected vertex as Source"
-              aria-label="Set selected vertex as Source"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors border"
-              style={{
-                backgroundColor: sourceId === selectedNodeId ? 'var(--success-subtle)' : 'var(--surface)',
-                borderColor: sourceId === selectedNodeId ? 'var(--success)' : 'var(--border)',
-                color: sourceId === selectedNodeId ? 'var(--success)' : 'var(--text-secondary)',
-              }}
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span>Set Source</span>
-            </button>
-            <button
-              onClick={() => setTargetId(selectedNodeId)}
-              title="Set selected vertex as Destination"
-              aria-label="Set selected vertex as Destination"
-              className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors border"
-              style={{
-                backgroundColor: targetId === selectedNodeId ? 'var(--danger-subtle)' : 'var(--surface)',
-                borderColor: targetId === selectedNodeId ? 'var(--danger)' : 'var(--border)',
-                color: targetId === selectedNodeId ? 'var(--danger)' : 'var(--text-secondary)',
-              }}
-            >
-              <Target className="w-3.5 h-3.5" />
-              <span>Set Target</span>
-            </button>
-            <button
-              onClick={handleDeleteSelected}
-              title="Delete selected vertex"
-              aria-label="Delete selected vertex"
-              className="p-2 rounded-md border hover:bg-[var(--danger-subtle)] transition-colors cursor-pointer"
-              style={{
-                borderColor: 'var(--border)',
-                color: 'var(--danger)',
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </>
-        )}
-      </div>
+          <button
+            onClick={() => setTargetId(selectedNodeId)}
+            title="Set selected vertex as destination"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors"
+            style={{
+              backgroundColor: targetId === selectedNodeId ? 'var(--error-subtle)' : 'transparent',
+              color: targetId === selectedNodeId ? 'var(--error)' : 'var(--text-secondary)',
+            }}
+          >
+            <Target className="w-3.5 h-3.5" />
+            <span>Set destination</span>
+          </button>
+
+          <div className="h-4 w-[1px]" style={{ backgroundColor: 'var(--border)' }} />
+
+          <button
+            onClick={handleDeleteSelected}
+            title="Delete selected vertex"
+            className="p-1.5 rounded hover:bg-[var(--error-subtle)] transition-colors cursor-pointer"
+            style={{ color: 'var(--error)' }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       <ReactFlow
         nodes={displayNodes}
@@ -306,10 +248,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         onNodeClick={(_, node) => setSelectedNodeId(node.id)}
         onPaneClick={() => setSelectedNodeId(null)}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.25}
-        maxZoom={2.2}
-        className="w-full h-full"
+        fitViewOptions={{ padding: 0.35 }}
+        minZoom={0.3}
+        maxZoom={2.0}
+        className="w-full h-full pb-2"
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -318,27 +260,17 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
           color="var(--canvas-grid)"
         />
         <Controls
+          showInteractive={false}
           className="!border !shadow-sm !rounded-md"
           style={{
             backgroundColor: 'var(--surface-elevated)',
-            borderColor: 'var(--border-strong)',
-            color: 'var(--text-primary)',
-          }}
-        />
-        <MiniMap
-          nodeColor={(n) => {
-            if (n.id === sourceId) return 'var(--success)';
-            if (n.id === targetId) return 'var(--danger)';
-            return 'var(--accent)';
-          }}
-          maskColor="rgba(0, 0, 0, 0.4)"
-          className="!border !rounded-md !shadow-sm hidden md:block"
-          style={{
-            backgroundColor: 'var(--surface-elevated)',
-            borderColor: 'var(--border-strong)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
           }}
         />
       </ReactFlow>
     </div>
   );
 };
+
+export default GraphCanvas;

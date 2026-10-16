@@ -5,7 +5,6 @@ import {
   SkipBack,
   SkipForward,
   RotateCcw,
-  Gauge,
 } from 'lucide-react';
 
 interface PlaybackBarProps {
@@ -42,21 +41,21 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
 
   return (
     <footer
-      className="h-[76px] border-t px-6 flex items-center justify-between gap-6 select-none z-30 transition-colors"
+      className="h-[72px] border-t px-6 flex items-center justify-between gap-4 select-none z-30 shrink-0"
       style={{
         backgroundColor: 'var(--surface)',
         borderColor: 'var(--border)',
         color: 'var(--text-primary)',
       }}
     >
-      {/* Primary Playback Action Controls */}
-      <div className="flex items-center gap-2">
+      {/* 1. Restart, 2. Previous, 3. Play/Pause (Primary), 4. Next */}
+      <div className="flex items-center gap-1.5">
         <button
           onClick={onRestart}
-          title="Restart to Initial Step"
-          aria-label="Restart from Beginning"
+          title="Restart from beginning"
+          aria-label="Restart from beginning"
           disabled={totalSteps === 0 || isAtStart}
-          className="w-10 h-10 rounded-md border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          className="w-9 h-9 rounded border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none"
           style={{
             backgroundColor: 'var(--background)',
             borderColor: 'var(--border)',
@@ -68,10 +67,10 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
 
         <button
           onClick={onPrev}
-          title="Previous Step"
-          aria-label="Previous Step"
+          title="Previous step"
+          aria-label="Previous step"
           disabled={totalSteps === 0 || isAtStart}
-          className="w-10 h-10 rounded-md border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          className="w-9 h-9 rounded border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none"
           style={{
             backgroundColor: 'var(--background)',
             borderColor: 'var(--border)',
@@ -81,37 +80,37 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
           <SkipBack className="w-4 h-4" />
         </button>
 
-        {/* Strongest Play/Pause Action Button */}
+        {/* Primary Play/Pause Action */}
         <button
           onClick={isPlaying ? onPause : onPlay}
-          title={isPlaying ? 'Pause Playback' : 'Play Execution'}
+          title={isPlaying ? 'Pause' : 'Play'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
           disabled={totalSteps === 0}
-          className="px-5 h-11 rounded-md flex items-center gap-2 font-semibold transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] shadow-sm"
+          className="px-4 h-9 rounded flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none"
           style={{
-            backgroundColor: 'var(--accent)',
-            color: '#FFFDF8',
+            backgroundColor: 'var(--primary-action)',
+            color: '#FFFFFF',
           }}
         >
           {isPlaying ? (
             <>
               <Pause className="w-4 h-4 fill-current" />
-              <span className="text-sm">Pause</span>
+              <span>Pause</span>
             </>
           ) : (
             <>
               <Play className="w-4 h-4 fill-current" />
-              <span className="text-sm">Play</span>
+              <span>Play</span>
             </>
           )}
         </button>
 
         <button
           onClick={onNext}
-          title="Next Step"
-          aria-label="Next Step"
+          title="Next step"
+          aria-label="Next step"
           disabled={totalSteps === 0 || isAtEnd}
-          className="w-10 h-10 rounded-md border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          className="w-9 h-9 rounded border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none"
           style={{
             backgroundColor: 'var(--background)',
             borderColor: 'var(--border)',
@@ -122,68 +121,56 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
         </button>
       </div>
 
-      {/* Step Scrubber Slider */}
-      <div className="flex-1 max-w-xl flex items-center gap-3">
-        <span
-          className="text-xs font-mono font-bold min-w-[70px]"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {totalSteps > 0 ? `Step ${currentStepIndex + 1}` : 'No steps'}
-        </span>
-
-        <div className="flex-1 relative flex items-center">
-          <input
-            type="range"
-            min={0}
-            max={Math.max(0, totalSteps - 1)}
-            value={currentStepIndex}
-            onChange={(e) => onSeek(Number(e.target.value))}
-            disabled={totalSteps <= 1}
-            aria-label="Timeline step scrubber"
-            className="w-full h-2 rounded-md appearance-none cursor-pointer focus-visible:outline-none disabled:opacity-30"
-            style={{
-              backgroundColor: 'var(--border-strong)',
-              accentColor: 'var(--accent)',
-            }}
-          />
-        </div>
-
-        <span
-          className="text-xs font-mono min-w-[60px] text-right"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          {totalSteps > 0 ? `of ${totalSteps}` : '0 of 0'}
-        </span>
+      {/* 5. Timeline Scrubber */}
+      <div className="flex-1 max-w-xl mx-2 flex items-center">
+        <input
+          type="range"
+          min={0}
+          max={Math.max(0, totalSteps - 1)}
+          value={currentStepIndex}
+          onChange={(e) => onSeek(Number(e.target.value))}
+          disabled={totalSteps <= 1}
+          aria-label="Timeline step scrubber"
+          className="w-full h-1.5 rounded-lg appearance-none cursor-pointer focus-visible:outline-none disabled:opacity-30"
+          style={{
+            backgroundColor: 'var(--border-strong)',
+            accentColor: 'var(--primary-action)',
+          }}
+        />
       </div>
 
-      {/* Speed Controls */}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5 text-xs mr-1" style={{ color: 'var(--text-muted)' }}>
-          <Gauge className="w-4 h-4" />
-          <span className="hidden sm:inline">Speed:</span>
-        </div>
-        <div
-          className="flex items-center p-1 rounded-md border"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-          }}
+      {/* 6. Step 1 of 12 & 7. Speed Menu */}
+      <div className="flex items-center gap-4">
+        <span
+          className="text-xs font-mono font-medium whitespace-nowrap"
+          style={{ color: 'var(--text-secondary)' }}
         >
-          {speeds.map((s) => (
-            <button
-              key={s}
-              onClick={() => setSpeedMultiplier(s)}
-              aria-label={`Set speed to ${s}x`}
-              className="px-2 py-1 text-xs font-mono font-semibold rounded transition-colors cursor-pointer min-w-[28px]"
-              style={{
-                backgroundColor: speedMultiplier === s ? 'var(--surface-elevated)' : 'transparent',
-                border: speedMultiplier === s ? '1px solid var(--border-strong)' : '1px solid transparent',
-                color: speedMultiplier === s ? 'var(--accent)' : 'var(--text-muted)',
-              }}
-            >
-              {s}x
-            </button>
-          ))}
+          {totalSteps > 0 ? `Step ${currentStepIndex + 1} of ${totalSteps}` : '0 steps'}
+        </span>
+
+        {/* Compact Speed Dropdown */}
+        <div className="flex items-center gap-1.5 text-xs">
+          <label htmlFor="playback-speed" className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Speed:
+          </label>
+          <select
+            id="playback-speed"
+            value={speedMultiplier}
+            onChange={(e) => setSpeedMultiplier(Number(e.target.value))}
+            aria-label="Playback speed"
+            className="px-2 py-1 rounded border text-xs font-mono font-medium cursor-pointer focus-visible:outline-none min-h-[32px]"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            {speeds.map((s) => (
+              <option key={s} value={s}>
+                {s}×
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </footer>

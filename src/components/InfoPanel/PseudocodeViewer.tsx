@@ -12,23 +12,23 @@ export const PseudocodeViewer: React.FC<PseudocodeViewerProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs font-mono">
+      <div className="flex items-center justify-between text-xs">
         <span
-          className="font-bold uppercase tracking-wider"
+          className="font-medium"
           style={{ color: 'var(--text-secondary)' }}
         >
-          {metadata.name} Pseudocode
+          {metadata.name}
         </span>
         {activeLine && (
           <span
-            className="px-2 py-0.5 rounded font-bold border"
+            className="px-2 py-0.5 rounded font-mono text-xs font-medium border"
             style={{
-              backgroundColor: 'var(--active-step-subtle)',
-              borderColor: 'var(--active-step)',
-              color: 'var(--active-step)',
+              backgroundColor: 'var(--primary-subtle)',
+              borderColor: 'var(--primary-action)',
+              color: 'var(--primary-action)',
             }}
           >
-            Executing Line {activeLine}
+            Line {activeLine}
           </span>
         )}
       </div>
@@ -37,7 +37,7 @@ export const PseudocodeViewer: React.FC<PseudocodeViewerProps> = ({
         className="rounded-md border p-3 font-mono text-xs overflow-x-auto"
         style={{
           backgroundColor: 'var(--background)',
-          borderColor: 'var(--border-strong)',
+          borderColor: 'var(--border)',
         }}
       >
         <div className="space-y-1 min-w-max">
