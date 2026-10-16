@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import type { AlgorithmType, StepSnapshot } from '../../types/graph';
 import { ALGORITHMS_METADATA } from '../../data/algorithmsInfo';
-import { PseudocodeViewer } from './PseudocodeViewer';
 import { StepExplanation } from './StepExplanation';
+import { PseudocodeViewer } from './PseudocodeViewer';
 import { DataStructureViewer } from './DataStructureViewer';
 import { ResultSummary } from './ResultSummary';
-import { BookOpen, Code2, Database } from 'lucide-react';
+import { MessageSquareText, Code2, Database, Award } from 'lucide-react';
 
 interface InfoPanelProps {
   algorithm: AlgorithmType;
@@ -14,6 +14,8 @@ interface InfoPanelProps {
   totalSteps: number;
 }
 
+type TabType = 'explanation' | 'pseudocode' | 'data' | 'result';
+
 export const InfoPanel: React.FC<InfoPanelProps> = ({
   algorithm,
   snapshot,
@@ -21,81 +23,106 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   totalSteps,
 }) => {
   const metadata = ALGORITHMS_METADATA[algorithm];
-  const [activeTab, setActiveTab] = useState<'pseudocode' | 'datastructure'>('pseudocode');
+  const [activeTab, setActiveTab] = useState<TabType>('explanation');
+
+  const tabs: { id: TabType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'explanation', label: 'Explanation', icon: MessageSquareText },
+    { id: 'pseudocode', label: 'Pseudocode', icon: Code2 },
+    { id: 'data', label: 'Data', icon: Database },
+    { id: 'result', label: 'Result', icon: Award },
+  ];
 
   return (
-    <aside className="w-96 h-full border-l border-slate-800 bg-slate-950/80 backdrop-blur-md flex flex-col overflow-y-auto p-4 space-y-4">
+    <aside
+      className="w-full h-full flex flex-col overflow-hidden"
+      style={{
+        backgroundColor: 'var(--surface)',
+        color: 'var(--text-primary)',
+      }}
+    >
       {/* Algorithm Header */}
-      <div className="pb-3 border-b border-slate-800/80 space-y-2">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-blue-400" />
-          <h2 className="text-sm font-bold text-slate-100">{metadata.name}</h2>
+      <div
+        className="p-5 border-b space-y-2 shrink-0"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className="flex items-center justify-between">
+          <h2
+            className="text-base font-bold tracking-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {metadata.name}
+          </h2>
+          <span
+            className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded border"
+            style={{
+              backgroundColor: 'var(--background-secondary)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {metadata.timeComplexity.worst}
+          </span>
         </div>
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p
+          className="text-xs leading-relaxed"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           {metadata.shortDescription}
         </p>
-
-        {/* Complexity Badges */}
-        <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-          <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-            <div className="text-slate-500 font-medium">Time Complexity</div>
-            <div className="font-mono font-bold text-blue-300">
-              {metadata.timeComplexity.worst}
-            </div>
-          </div>
-          <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-            <div className="text-slate-500 font-medium">Space Complexity</div>
-            <div className="font-mono font-bold text-indigo-300">
-              {metadata.spaceComplexity}
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Real-time Step Explanation */}
-      <StepExplanation
-        snapshot={snapshot}
-        currentStepIndex={currentStepIndex}
-        totalSteps={totalSteps}
-      />
+      {/* 4-Tab Segmented Navigation */}
+      <div
+        className="px-3 pt-2.5 pb-2 border-b grid grid-cols-4 gap-1 shrink-0"
+        style={{
+          backgroundColor: 'var(--background-secondary)',
+          borderColor: 'var(--border)',
+        }}
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="flex items-center justify-center gap-1.5 py-2 px-1 rounded-md text-xs font-semibold transition-all cursor-pointer focus-visible:outline-none min-h-[36px]"
+              style={{
+                backgroundColor: isActive ? 'var(--surface-elevated)' : 'transparent',
+                border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
+                color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+              }}
+            >
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Final Result Card (when complete or found) */}
-      <ResultSummary snapshot={snapshot} algorithm={algorithm} />
+      {/* Tab Content Panel */}
+      <div className="flex-1 overflow-y-auto p-5">
+        {activeTab === 'explanation' && (
+          <StepExplanation
+            snapshot={snapshot}
+            currentStepIndex={currentStepIndex}
+            totalSteps={totalSteps}
+          />
+        )}
 
-      {/* Tabs for Pseudocode & Live Data Structure */}
-      <div className="space-y-2">
-        <div className="flex border-b border-slate-800 text-xs">
-          <button
-            onClick={() => setActiveTab('pseudocode')}
-            className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 cursor-pointer transition-colors ${
-              activeTab === 'pseudocode'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span>Pseudocode</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('datastructure')}
-            className={`flex items-center gap-1.5 px-3 py-2 font-medium border-b-2 cursor-pointer transition-colors ${
-              activeTab === 'datastructure'
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>Data Structure</span>
-          </button>
-        </div>
-
-        {activeTab === 'pseudocode' ? (
+        {activeTab === 'pseudocode' && (
           <PseudocodeViewer
             metadata={metadata}
             activeLine={snapshot?.codeLine}
           />
-        ) : (
+        )}
+
+        {activeTab === 'data' && (
           <DataStructureViewer snapshot={snapshot} />
+        )}
+
+        {activeTab === 'result' && (
+          <ResultSummary snapshot={snapshot} algorithm={algorithm} />
         )}
       </div>
     </aside>

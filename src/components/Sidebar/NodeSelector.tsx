@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Node } from '@xyflow/react';
 import type { GraphNodeData } from '../../types/graph';
-import { ArrowLeftRight, Flag, Target } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 
 interface NodeSelectorProps {
   nodes: Node<GraphNodeData>[];
@@ -27,57 +27,69 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-          Source & Target Vertices
+        <label className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          Routing Termini
         </label>
         {nodes.length >= 2 && (
           <button
             onClick={handleSwap}
-            title="Swap Source and Target"
-            className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 cursor-pointer"
+            title="Swap Source and Destination"
+            aria-label="Swap Source and Destination"
+            className="flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors px-2 py-1 rounded hover:bg-[var(--background-secondary)]"
+            style={{ color: 'var(--accent)' }}
           >
-            <ArrowLeftRight className="w-3 h-3" />
+            <ArrowLeftRight className="w-3.5 h-3.5" />
             <span>Swap</span>
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-2.5">
         {/* Source Picker */}
-        <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Flag className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs font-medium text-slate-300">Source (Start)</span>
-          </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+            Source Vertex (S)
+          </label>
           <select
             value={sourceId}
             onChange={(e) => setSourceId(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs font-mono font-semibold text-slate-100 focus:outline-none focus:border-emerald-500 cursor-pointer"
+            aria-label="Source Vertex"
+            className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border-strong)',
+              color: 'var(--text-primary)',
+            }}
           >
-            {nodes.length === 0 && <option value="">No nodes</option>}
+            {nodes.length === 0 && <option value="">No nodes available</option>}
             {nodes.map((node) => (
               <option key={node.id} value={node.id}>
-                {node.data.label || node.id}
+                Vertex {node.data.label || node.id}
               </option>
             ))}
           </select>
         </div>
 
         {/* Target Picker */}
-        <div className="p-2.5 rounded-xl border border-slate-800 bg-slate-900/60">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Target className="w-3.5 h-3.5 text-rose-400" />
-            <span className="text-xs font-medium text-slate-300">Destination</span>
-          </div>
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
+            Destination Vertex (T)
+          </label>
           <select
             value={targetId}
             onChange={(e) => setTargetId(e.target.value)}
-            className="w-full px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-xs font-mono font-semibold text-slate-100 focus:outline-none focus:border-rose-500 cursor-pointer"
+            aria-label="Destination Vertex"
+            className="w-full px-3 py-2.5 rounded-md border font-mono text-sm font-semibold cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[44px]"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border-strong)',
+              color: 'var(--text-primary)',
+            }}
           >
-            {nodes.length === 0 && <option value="">No nodes</option>}
+            {nodes.length === 0 && <option value="">No nodes available</option>}
             {nodes.map((node) => (
               <option key={node.id} value={node.id}>
-                {node.data.label || node.id}
+                Vertex {node.data.label || node.id}
               </option>
             ))}
           </select>
@@ -85,8 +97,15 @@ export const NodeSelector: React.FC<NodeSelectorProps> = ({
       </div>
 
       {sourceId && targetId && sourceId === targetId && (
-        <p className="text-[11px] text-amber-400/90 bg-amber-950/30 border border-amber-800/50 rounded-lg p-2">
-          Note: Source and Destination are the same vertex (trivial path of length 0).
+        <p
+          className="text-xs p-2.5 rounded border"
+          style={{
+            backgroundColor: 'var(--active-step-subtle)',
+            borderColor: 'var(--active-step)',
+            color: 'var(--active-step)',
+          }}
+        >
+          Notice: Source and Destination are identical (trivial 0-cost path).
         </p>
       )}
     </div>

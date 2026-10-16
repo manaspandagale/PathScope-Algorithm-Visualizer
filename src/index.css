@@ -1,21 +1,82 @@
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource/ibm-plex-mono";
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* LIGHT THEME — WARM BEIGE */
+    --background: #F3EEE4;
+    --background-secondary: #EAE2D5;
+    --surface: #FBF8F1;
+    --surface-elevated: #FFFDF8;
+    --text-primary: #211E1A;
+    --text-secondary: #625C53;
+    --text-muted: #7A7369;
+    --border: #D5CCBD;
+    --border-strong: #BFB4A4;
+    --accent: #C65F37;
+    --accent-hover: #A94B2A;
+    --accent-subtle: rgba(198, 95, 55, 0.12);
+    --secondary-accent: #3F735F;
+    --secondary-subtle: rgba(63, 115, 95, 0.12);
+    --active-step: #D18A24;
+    --active-step-subtle: rgba(209, 138, 36, 0.15);
+    --success: #39745C;
+    --success-subtle: rgba(57, 116, 92, 0.12);
+    --danger: #B8493F;
+    --danger-subtle: rgba(184, 73, 63, 0.12);
+    --canvas-grid: #D5CCBD;
+    --focus-ring: #C65F37;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  .dark {
+    /* DARK THEME — TRUE NEUTRAL CHARCOAL */
+    --background: #11100E;
+    --background-secondary: #171512;
+    --surface: #1C1A17;
+    --surface-elevated: #24211D;
+    --text-primary: #F4EEE4;
+    --text-secondary: #C5BDB1;
+    --text-muted: #9E9589;
+    --border: #3A352E;
+    --border-strong: #514A40;
+    --accent: #E0794E;
+    --accent-hover: #F08A5D;
+    --accent-subtle: rgba(224, 121, 78, 0.15);
+    --secondary-accent: #70A087;
+    --secondary-subtle: rgba(112, 160, 135, 0.15);
+    --active-step: #E7A73E;
+    --active-step-subtle: rgba(231, 167, 62, 0.18);
+    --success: #6DB493;
+    --success-subtle: rgba(109, 180, 147, 0.15);
+    --danger: #E06C62;
+    --danger-subtle: rgba(224, 108, 98, 0.15);
+    --canvas-grid: #2A2622;
+    --focus-ring: #E0794E;
   }
 
   body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Instrument Sans Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  code, pre, kbd, samp, .font-mono {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
   }
 }
 
-/* Custom scrollbars */
+/* Custom minimal scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -24,11 +85,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
-  border-radius: 3px;
+  background: var(--border-strong);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: var(--text-muted);
 }
 
 /* React Flow customizations */
@@ -36,33 +97,40 @@
   display: none !important;
 }
 
-/* Ensure React Flow node wrappers don't force white backgrounds or collapse custom styling */
 .react-flow__node {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
-  border-radius: 0.75rem !important;
+  border-radius: var(--radius-md) !important;
 }
 
 .react-flow__node.selected {
   box-shadow: none !important;
 }
 
-@keyframes pulse-ring {
+/* Node pulse for active step */
+@keyframes active-node-pulse {
   0% {
-    transform: scale(0.96);
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+    box-shadow: 0 0 0 0 var(--active-step-subtle);
   }
   70% {
-    transform: scale(1.04);
-    box-shadow: 0 0 0 12px rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 8px transparent;
   }
   100% {
-    transform: scale(0.96);
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
 .node-pulse-current {
-  animation: pulse-ring 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  animation: active-node-pulse 2s infinite ease-in-out;
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

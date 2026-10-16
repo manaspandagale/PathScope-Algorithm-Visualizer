@@ -58,7 +58,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   isDirected = false,
   selectedNodeId,
   setSelectedNodeId,
-  theme = 'dark',
 }) => {
   // Apply snapshot visualization states to nodes
   const displayNodes = useMemo(() => {
@@ -180,8 +179,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     }
 
     const newNodeId = `node-${Date.now()}`;
-    const x = 120 + ((nodes.length * 90) % 600);
-    const y = 140 + ((nodes.length * 60) % 360);
+    const x = 140 + ((nodes.length * 80) % 520);
+    const y = 140 + ((nodes.length * 60) % 320);
 
     const newNode: Node<GraphNodeData> = {
       id: newNodeId,
@@ -219,51 +218,76 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   }, [selectedNodeId, nodes, sourceId, targetId, setNodes, setEdges, setSourceId, setTargetId, setSelectedNodeId]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden select-none ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-100'}`}>
+    <div
+      className="relative w-full h-full overflow-hidden select-none"
+      style={{
+        backgroundColor: 'var(--background)',
+      }}
+    >
       <CanvasLegend />
 
-      {/* Floating Action Bar */}
-      <div className={`absolute top-4 right-4 z-10 flex items-center gap-1.5 p-1.5 rounded-xl border backdrop-blur-md shadow-xl ${theme === 'dark' ? 'border-slate-800 bg-slate-900/90' : 'border-slate-300 bg-white/90'}`}>
+      {/* Floating Canvas Toolbar */}
+      <div
+        className="absolute top-4 right-4 z-10 flex items-center gap-2 p-1.5 rounded-md border shadow-sm"
+        style={{
+          backgroundColor: 'var(--surface-elevated)',
+          borderColor: 'var(--border-strong)',
+        }}
+      >
         <button
           onClick={handleAddNode}
-          title="Add Node"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white shadow-md shadow-blue-600/30 transition-all cursor-pointer"
+          title="Add Vertex"
+          aria-label="Add Vertex"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-semibold cursor-pointer transition-colors focus-visible:outline-none min-h-[36px]"
+          style={{
+            backgroundColor: 'var(--accent)',
+            color: '#FFFDF8',
+          }}
         >
           <Plus className="w-4 h-4" />
-          <span>Add Node</span>
+          <span>Add Vertex</span>
         </button>
 
         {selectedNodeId && (
           <>
-            <div className={`h-4 w-[1px] mx-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`} />
+            <div className="h-5 w-[1px]" style={{ backgroundColor: 'var(--border)' }} />
             <button
               onClick={() => setSourceId(selectedNodeId)}
-              title="Set selected node as Source"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                sourceId === selectedNodeId
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  : theme === 'dark' ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-200'
-              }`}
+              title="Set selected vertex as Source"
+              aria-label="Set selected vertex as Source"
+              className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors border"
+              style={{
+                backgroundColor: sourceId === selectedNodeId ? 'var(--success-subtle)' : 'var(--surface)',
+                borderColor: sourceId === selectedNodeId ? 'var(--success)' : 'var(--border)',
+                color: sourceId === selectedNodeId ? 'var(--success)' : 'var(--text-secondary)',
+              }}
             >
-              <Flag className="w-3.5 h-3.5 text-emerald-400" />
+              <Flag className="w-3.5 h-3.5" />
               <span>Set Source</span>
             </button>
             <button
               onClick={() => setTargetId(selectedNodeId)}
-              title="Set selected node as Target"
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                targetId === selectedNodeId
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                  : theme === 'dark' ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-200'
-              }`}
+              title="Set selected vertex as Destination"
+              aria-label="Set selected vertex as Destination"
+              className="flex items-center gap-1 px-3 py-2 rounded-md text-xs font-medium cursor-pointer transition-colors border"
+              style={{
+                backgroundColor: targetId === selectedNodeId ? 'var(--danger-subtle)' : 'var(--surface)',
+                borderColor: targetId === selectedNodeId ? 'var(--danger)' : 'var(--border)',
+                color: targetId === selectedNodeId ? 'var(--danger)' : 'var(--text-secondary)',
+              }}
             >
-              <Target className="w-3.5 h-3.5 text-rose-400" />
+              <Target className="w-3.5 h-3.5" />
               <span>Set Target</span>
             </button>
             <button
               onClick={handleDeleteSelected}
-              title="Delete selected node"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors cursor-pointer"
+              title="Delete selected vertex"
+              aria-label="Delete selected vertex"
+              className="p-2 rounded-md border hover:bg-[var(--danger-subtle)] transition-colors cursor-pointer"
+              style={{
+                borderColor: 'var(--border)',
+                color: 'var(--danger)',
+              }}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -283,20 +307,36 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         onPaneClick={() => setSelectedNodeId(null)}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.2}
-        maxZoom={2.5}
+        minZoom={0.25}
+        maxZoom={2.2}
         className="w-full h-full"
       >
-        <Background variant={BackgroundVariant.Dots} gap={24} size={1.5} color={theme === 'dark' ? '#334155' : '#cbd5e1'} />
-        <Controls className="!bg-slate-900 !border-slate-800 !text-slate-200 !rounded-xl !shadow-xl [&>button]:!border-slate-800 [&>button:hover]:!bg-slate-800" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={24}
+          size={1.5}
+          color="var(--canvas-grid)"
+        />
+        <Controls
+          className="!border !shadow-sm !rounded-md"
+          style={{
+            backgroundColor: 'var(--surface-elevated)',
+            borderColor: 'var(--border-strong)',
+            color: 'var(--text-primary)',
+          }}
+        />
         <MiniMap
           nodeColor={(n) => {
-            if (n.id === sourceId) return '#10b981';
-            if (n.id === targetId) return '#f43f5e';
-            return '#3b82f6';
+            if (n.id === sourceId) return 'var(--success)';
+            if (n.id === targetId) return 'var(--danger)';
+            return 'var(--accent)';
           }}
-          maskColor="rgba(2, 6, 23, 0.75)"
-          className="!bg-slate-900 !border-slate-800 !rounded-xl !shadow-xl"
+          maskColor="rgba(0, 0, 0, 0.4)"
+          className="!border !rounded-md !shadow-sm hidden md:block"
+          style={{
+            backgroundColor: 'var(--surface-elevated)',
+            borderColor: 'var(--border-strong)',
+          }}
         />
       </ReactFlow>
     </div>

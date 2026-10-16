@@ -5,17 +5,17 @@ export const ALGORITHMS_METADATA: Record<AlgorithmType, AlgorithmMetadata> = {
     id: 'bfs',
     name: 'Breadth-First Search (BFS)',
     shortDescription:
-      'Explores the graph layer by layer using a FIFO Queue. Guarantees the shortest path in unweighted graphs in terms of minimum number of edges (hops).',
+      'Explores the graph layer by layer using a FIFO Queue. Guarantees the shortest path in terms of minimum number of edges (hops) on unweighted/unit-cost graphs.',
     category: 'Graph Traversal / Unweighted Shortest Path',
-    guarantee: 'Guarantees shortest path in unweighted graphs (hop count)',
+    guarantee: 'Guarantees minimum hops (edge count). Numeric weights are ignored.',
     warning:
-      'Note: BFS treats each edge as exactly 1 hop, ignoring numeric edge weights. In weighted graphs, the BFS path may not be the minimum weight path.',
+      'Note: BFS treats each edge as exactly 1 hop, ignoring numeric edge weights. In weighted graphs, the BFS path may have fewer hops but a higher total numeric cost than Dijkstra.',
     timeComplexity: {
       worst: 'O(V + E)',
       average: 'O(V + E)',
       best: 'O(1) (Target is Source)',
     },
-    spaceComplexity: 'O(V) (Queue and Visited tracking)',
+    spaceComplexity: 'O(V) auxiliary space',
     dataStructureName: 'FIFO Queue',
     pseudocode: [
       { line: 1, text: 'function BFS(graph, source, target):', indent: 0 },
@@ -33,55 +33,22 @@ export const ALGORITHMS_METADATA: Record<AlgorithmType, AlgorithmMetadata> = {
       { line: 13, text: 'return "Target Unreachable"', indent: 1 },
     ],
   },
-  dfs: {
-    id: 'dfs',
-    name: 'Depth-First Search (DFS)',
-    shortDescription:
-      'Explores as deep as possible along each branch before backtracking using a LIFO Stack. Useful for connectivity and cycle detection.',
-    category: 'Graph Traversal',
-    guarantee: 'Finds a reachable path, but DOES NOT guarantee the shortest path!',
-    warning:
-      'CRITICAL: DFS does NOT guarantee the shortest path! It explores one deep branch first and returns the first path discovered, which may be suboptimal.',
-    timeComplexity: {
-      worst: 'O(V + E)',
-      average: 'O(V + E)',
-      best: 'O(1) (Target is Source)',
-    },
-    spaceComplexity: 'O(V) (Call stack / Explicit stack)',
-    dataStructureName: 'LIFO Stack',
-    pseudocode: [
-      { line: 1, text: 'function DFS(graph, source, target):', indent: 0 },
-      { line: 2, text: 'let stack = new Stack()', indent: 1 },
-      { line: 3, text: 'let visited = new Set()', indent: 1 },
-      { line: 4, text: 'stack.push(source)', indent: 1 },
-      { line: 5, text: 'while stack is not empty:', indent: 1 },
-      { line: 6, text: 'current = stack.pop()', indent: 2 },
-      { line: 7, text: 'if current == target: return reconstructPath(target)', indent: 2 },
-      { line: 8, text: 'if current not in visited:', indent: 2 },
-      { line: 9, text: 'visited.add(current)', indent: 3 },
-      { line: 10, text: 'for neighbor in reversed(graph.neighbors(current)):', indent: 3 },
-      { line: 11, text: 'if neighbor not in visited:', indent: 4 },
-      { line: 12, text: 'parent[neighbor] = current', indent: 5 },
-      { line: 13, text: 'stack.push(neighbor)', indent: 5 },
-      { line: 14, text: 'return "Target Unreachable"', indent: 1 },
-    ],
-  },
   dijkstra: {
     id: 'dijkstra',
-    name: "Dijkstra's Algorithm",
+    name: "Dijkstra's Shortest Path Algorithm",
     shortDescription:
-      'Greedy shortest path algorithm for graphs with non-negative edge weights. Always expands the vertex with the lowest known tentative distance using a Min-Heap Priority Queue.',
-    category: 'Single-Source Shortest Path (Weighted)',
-    guarantee: 'Guarantees optimal (minimum total weight) shortest path for non-negative weights',
+      'Greedy shortest path algorithm for graphs with non-negative edge weights. Always expands the vertex with the lowest tentative distance using a Min-Heap Priority Queue.',
+    category: 'Single-Source Shortest Path (Non-Negative Weights)',
+    guarantee: 'Guarantees optimal (minimum total weight) shortest path for non-negative weights (w ≥ 0).',
     warning:
-      'Requires non-negative edge weights (w ≥ 0). Graphs with negative edges require DAG Shortest Path or Bellman-Ford.',
+      'Requires non-negative edge weights (w ≥ 0). Negative weights are detected and rejected by the C++ engine before execution.',
     timeComplexity: {
-      worst: 'O((V + E) log V) with Binary Min-Heap',
+      worst: 'O((V + E) log V)',
       average: 'O((V + E) log V)',
       best: 'O(log V) (Target is Source)',
     },
-    spaceComplexity: 'O(V) (Min-Heap, distances & predecessor map)',
-    dataStructureName: 'Min-Heap Priority Queue',
+    spaceComplexity: 'O(V + E) practical storage',
+    dataStructureName: 'Binary Min-Heap Priority Queue',
     pseudocode: [
       { line: 1, text: 'function Dijkstra(graph, source, target):', indent: 0 },
       { line: 2, text: 'dist = { v: ∞ for v in graph.vertices }; dist[source] = 0', indent: 1 },
@@ -98,60 +65,47 @@ export const ALGORITHMS_METADATA: Record<AlgorithmType, AlgorithmMetadata> = {
       { line: 13, text: 'return "Target Unreachable"', indent: 1 },
     ],
   },
-  dag: {
+};
+
+export interface FutureScopeAlgorithm {
+  id: string;
+  name: string;
+  status: 'Deferred / Phase 2' | 'Not Yet Implemented';
+  category: string;
+  plannedComplexity: string;
+  plannedDataStructure: string;
+  description: string;
+}
+
+export const FUTURE_SCOPE_ALGORITHMS: FutureScopeAlgorithm[] = [
+  {
+    id: 'dfs',
+    name: 'Depth-First Search (DFS)',
+    status: 'Deferred / Phase 2',
+    category: 'Graph Traversal / Backtracking',
+    plannedComplexity: 'O(V + E)',
+    plannedDataStructure: 'LIFO Stack',
+    description:
+      'Deep exploration along connected branches before backtracking. Intentionally deferred to Phase 2 to focus Phase 1 strictly on shortest path optimality principles.',
+  },
+  {
     id: 'dag',
     name: 'DAG Shortest Path',
-    shortDescription:
-      'Computes single-source shortest paths in Directed Acyclic Graphs in linear O(V + E) time using Topological Sorting. Supports negative edge weights.',
-    category: 'Single-Source Shortest Path (Directed Acyclic)',
-    guarantee: 'Guarantees optimal shortest paths in O(V + E) time, even with negative weights (provided graph is acyclic)',
-    warning:
-      'Requires an Acyclic Directed Graph. If a directed cycle is present, topological sort fails and cycle detection is triggered.',
-    timeComplexity: {
-      worst: 'O(V + E) (Linear Time)',
-      average: 'O(V + E)',
-      best: 'O(V + E)',
-    },
-    spaceComplexity: 'O(V) (Topological sort queue & distance array)',
-    dataStructureName: 'Topological Order + Distance Array',
-    pseudocode: [
-      { line: 1, text: 'function DAGShortestPath(graph, source, target):', indent: 0 },
-      { line: 2, text: 'topoOrder = TopologicalSort(graph)', indent: 1 },
-      { line: 3, text: 'if cycleDetected(graph): return "Error: Graph has cycles"', indent: 1 },
-      { line: 4, text: 'dist = { v: ∞ }; dist[source] = 0', indent: 1 },
-      { line: 5, text: 'for u in topoOrder:', indent: 1 },
-      { line: 6, text: 'if dist[u] != ∞:', indent: 2 },
-      { line: 7, text: 'for (v, weight) in graph.outgoing(u):', indent: 3 },
-      { line: 8, text: 'if dist[u] + weight < dist[v]:', indent: 4 },
-      { line: 9, text: 'dist[v] = dist[u] + weight; parent[v] = u', indent: 5 },
-      { line: 10, text: 'return reconstructPath(target)', indent: 1 },
-    ],
+    status: 'Deferred / Phase 2',
+    category: 'Directed Acyclic Graphs',
+    plannedComplexity: 'O(V + E)',
+    plannedDataStructure: 'Topological Sort + Linear Relaxation',
+    description:
+      'Linear single-source shortest path using topological order. Planned for Phase 2 for acyclic graph modules.',
   },
-  'floyd-warshall': {
+  {
     id: 'floyd-warshall',
     name: 'Floyd–Warshall Algorithm',
-    shortDescription:
-      'Dynamic programming algorithm computing All-Pairs Shortest Paths. Considers every vertex as an intermediate hop and updates an n×n distance matrix.',
-    category: 'All-Pairs Shortest Path (Dynamic Programming)',
-    guarantee: 'Guarantees all-pairs shortest paths for graphs without negative cycles in O(V³) time',
-    warning:
-      'Time complexity is O(V³). Best suited for dense graphs or small/medium graphs (|V| ≤ 100). Detects negative cycles if dist[i][i] < 0.',
-    timeComplexity: {
-      worst: 'O(V³)',
-      average: 'O(V³)',
-      best: 'O(V³)',
-    },
-    spaceComplexity: 'O(V²) (n×n Distance and Predecessor matrices)',
-    dataStructureName: '2D Distance & Next Matrices',
-    pseudocode: [
-      { line: 1, text: 'function FloydWarshall(vertices, edges):', indent: 0 },
-      { line: 2, text: 'dist[i][j] = weight(i, j) if edge else (0 if i==j else ∞)', indent: 1 },
-      { line: 3, text: 'for k in vertices:  // intermediate vertex', indent: 1 },
-      { line: 4, text: 'for i in vertices:', indent: 2 },
-      { line: 5, text: 'for j in vertices:', indent: 3 },
-      { line: 6, text: 'if dist[i][k] + dist[k][j] < dist[i][j]:', indent: 4 },
-      { line: 7, text: 'dist[i][j] = dist[i][k] + dist[k][j]', indent: 5 },
-      { line: 8, text: 'return dist, next', indent: 1 },
-    ],
+    status: 'Deferred / Phase 2',
+    category: 'All-Pairs Shortest Path',
+    plannedComplexity: 'O(V³)',
+    plannedDataStructure: '2D Distance & Next Matrices',
+    description:
+      'Dynamic programming all-pairs shortest path matrix algorithm. Planned for Phase 2 dense network analysis.',
   },
-};
+];

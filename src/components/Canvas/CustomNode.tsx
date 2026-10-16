@@ -10,110 +10,145 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
   const state = nodeData.state || 'default';
   const distance = nodeData.distance;
 
-  // Determine styles strictly satisfying all requirements:
-  // 1. Dark node backgrounds with readable white/light text
-  // 2. Clearly visible in dark & light mode
-  // 3. Highlight source nodes in green
-  // 4. Highlight destination nodes in red/pink
-  // 5. Highlight currently active node in amber/yellow
-  // 6. Highlight visited nodes in cyan/blue
-  // 7. Highlight final shortest path in emerald green
-  let containerStyles = 'bg-slate-900 border-slate-700 text-slate-100 shadow-lg';
-  let badgeStyles = 'bg-slate-800 text-slate-200 border-slate-600';
+  // Determine multi-channel state representations
+  let borderColor = 'var(--border-strong)';
+  let borderWidth = '1.5px';
+  let borderStyle = 'solid';
+  let backgroundColor = 'var(--surface)';
+  let stateLabel = '';
   let pulseClass = '';
 
   if (state === 'current') {
-    // Active node: vivid amber background, bright yellow/amber border & animated ring
-    containerStyles = 'bg-amber-950 border-amber-400 text-amber-100 shadow-xl shadow-amber-500/50 ring-4 ring-amber-400/50';
+    borderColor = 'var(--active-step)';
+    borderWidth = '2.5px';
+    stateLabel = 'ACTIVE';
     pulseClass = 'node-pulse-current';
+    backgroundColor = 'var(--surface-elevated)';
   } else if (state === 'path') {
-    // Shortest path node: rich emerald background, glowing emerald border & ring
-    containerStyles = 'bg-emerald-950 border-emerald-400 text-emerald-100 shadow-xl shadow-emerald-500/50 ring-4 ring-emerald-400/40';
+    borderColor = 'var(--success)';
+    borderWidth = '3px';
+    stateLabel = 'PATH';
+    backgroundColor = 'var(--surface-elevated)';
   } else if (state === 'visited') {
-    // Visited/settled node: dark cyan background, cyan border & subtle glow
-    containerStyles = 'bg-cyan-950 border-cyan-400 text-cyan-100 shadow-md shadow-cyan-500/30';
+    borderColor = 'var(--secondary-accent)';
+    borderWidth = '2px';
+    stateLabel = 'VISITED';
   } else if (state === 'frontier') {
-    // Frontier node (in Queue / Stack / Min-Heap): dark indigo background, indigo border & ring
-    containerStyles = 'bg-indigo-950 border-indigo-400 text-indigo-100 shadow-md ring-2 ring-indigo-400/50';
+    borderColor = 'var(--accent)';
+    borderWidth = '2px';
+    borderStyle = 'dashed';
+    stateLabel = 'FRONTIER';
   } else if (isSource) {
-    // Source node: dark green background, solid green border
-    containerStyles = 'bg-emerald-950 border-emerald-500 text-emerald-100 shadow-md shadow-emerald-500/30';
+    borderColor = 'var(--success)';
+    borderWidth = '2.5px';
   } else if (isTarget) {
-    // Target node: dark rose background, solid rose border
-    containerStyles = 'bg-rose-950 border-rose-500 text-rose-100 shadow-md shadow-rose-500/30';
-  }
-
-  if (isSource) {
-    badgeStyles = 'bg-emerald-500 text-slate-950 font-black border-emerald-300';
-  } else if (isTarget) {
-    badgeStyles = 'bg-rose-500 text-white font-black border-rose-300';
+    borderColor = 'var(--danger)';
+    borderWidth = '2.5px';
   }
 
   return (
     <div
       style={{
-        backgroundColor: state === 'current'
-          ? '#451a03' // amber-950
-          : state === 'path'
-          ? '#022c22' // emerald-950
-          : state === 'visited'
-          ? '#083344' // cyan-950
-          : state === 'frontier'
-          ? '#1e1b4b' // indigo-950
-          : isSource
-          ? '#022c22' // emerald-950
-          : isTarget
-          ? '#4c0519' // rose-950
-          : '#0f172a', // slate-900
+        backgroundColor,
+        borderColor,
+        borderWidth,
+        borderStyle,
+        borderRadius: 'var(--radius-md)',
+        color: 'var(--text-primary)',
+        boxShadow: selected ? '0 0 0 2px var(--focus-ring)' : 'none',
       }}
-      className={`relative min-w-[76px] px-4 py-2.5 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center select-none ${containerStyles} ${pulseClass} ${
-        selected ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-950 scale-105' : ''
-      }`}
+      className={`relative min-w-[84px] px-3.5 py-2.5 transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
     >
       {/* React Flow handles for edge connection */}
       <Handle
         type="target"
         position={Position.Top}
-        className="!w-3.5 !h-3.5 !bg-blue-400 !border-2 !border-slate-900 hover:!bg-blue-300 !cursor-crosshair"
+        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        style={{
+          backgroundColor: 'var(--accent)',
+          borderColor: 'var(--surface)',
+        }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!w-3.5 !h-3.5 !bg-blue-400 !border-2 !border-slate-900 hover:!bg-blue-300 !cursor-crosshair"
+        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        style={{
+          backgroundColor: 'var(--accent)',
+          borderColor: 'var(--surface)',
+        }}
       />
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        className="!w-3.5 !h-3.5 !bg-blue-400 !border-2 !border-slate-900 hover:!bg-blue-300 !cursor-crosshair"
+        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        style={{
+          backgroundColor: 'var(--accent)',
+          borderColor: 'var(--surface)',
+        }}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        className="!w-3.5 !h-3.5 !bg-blue-400 !border-2 !border-slate-900 hover:!bg-blue-300 !cursor-crosshair"
+        className="!w-3 !h-3 !rounded-full !border-2 !cursor-crosshair"
+        style={{
+          backgroundColor: 'var(--accent)',
+          borderColor: 'var(--surface)',
+        }}
       />
 
       {/* Role badges: Source / Target */}
       {(isSource || isTarget) && (
         <span
-          className={`absolute -top-3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md border ${badgeStyles}`}
+          className="absolute -top-3 px-2 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded uppercase border"
+          style={{
+            backgroundColor: isSource ? 'var(--success)' : 'var(--danger)',
+            borderColor: isSource ? 'var(--success)' : 'var(--danger)',
+            color: '#FFFFFF',
+          }}
         >
           {isSource ? 'SOURCE' : 'TARGET'}
         </span>
       )}
 
       {/* Node label */}
-      <span className="font-extrabold text-base tracking-tight font-mono text-white drop-shadow">
+      <span
+        className="font-bold text-base tracking-tight font-mono"
+        style={{ color: 'var(--text-primary)' }}
+      >
         {nodeData.label || id}
       </span>
 
-      {/* Distance chip (for Dijkstra or BFS) */}
-      {distance !== undefined && distance !== null && (
-        <div className="mt-1 px-2 py-0.5 text-[10px] font-mono font-semibold rounded bg-slate-950/90 border border-slate-700 text-slate-200 shadow-inner">
-          d: {distance === Infinity ? '∞' : distance}
-        </div>
-      )}
+      {/* Accessible state label & distance badge */}
+      <div className="flex items-center gap-1.5 mt-1">
+        {stateLabel && !isSource && !isTarget && (
+          <span
+            className="px-1.5 py-0.5 text-[10px] font-mono font-bold tracking-wider rounded border"
+            style={{
+              backgroundColor: 'var(--background-secondary)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {stateLabel}
+          </span>
+        )}
+
+        {distance !== undefined && distance !== null && (
+          <div
+            className="px-1.5 py-0.5 text-[11px] font-mono font-semibold rounded border"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            d: {distance >= 1e8 ? '∞' : distance}
+          </div>
+        )}
+      </div>
     </div>
   );
 });

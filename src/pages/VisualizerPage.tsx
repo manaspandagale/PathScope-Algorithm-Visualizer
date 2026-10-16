@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Node, Edge } from '@xyflow/react';
+import { AlertCircle, Loader2, SlidersHorizontal, PanelRight } from 'lucide-react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData } from '../types/graph';
 import { useAlgorithmPlayback } from '../hooks/useAlgorithmPlayback';
 import { Sidebar } from '../components/Sidebar/Sidebar';
@@ -8,8 +9,6 @@ import { GraphCanvas } from '../components/Canvas/GraphCanvas';
 import { InfoPanel } from '../components/InfoPanel/InfoPanel';
 import { PlaybackBar } from '../components/Playback/PlaybackBar';
 import { EdgeWeightModal } from '../components/Canvas/EdgeWeightModal';
-import { GuideModal } from '../components/Navigation/GuideModal';
-import { ComingSoonModal } from '../components/Navigation/ComingSoonModal';
 
 interface VisualizerPageProps {
   theme: 'dark' | 'light';
@@ -25,10 +24,6 @@ interface VisualizerPageProps {
   setAlgorithm: (algo: AlgorithmType) => void;
   selectedNodeId: string | null;
   setSelectedNodeId: (id: string | null) => void;
-  isGuideOpen: boolean;
-  setIsGuideOpen: (open: boolean) => void;
-  isComingSoonOpen: boolean;
-  setIsComingSoonOpen: (open: boolean) => void;
 }
 
 export const VisualizerPage: React.FC<VisualizerPageProps> = ({
@@ -45,22 +40,23 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
   setAlgorithm,
   selectedNodeId,
   setSelectedNodeId,
-  isGuideOpen,
-  setIsGuideOpen,
-  isComingSoonOpen,
-  setIsComingSoonOpen,
 }) => {
   const [searchParams] = useSearchParams();
 
-  // Read URL query params e.g. /visualizer?algo=bfs
+  // Mobile / tablet panel drawers
+  const [mobileConfigOpen, setMobileConfigOpen] = useState(false);
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+
+  // Sync algorithm query parameter (e.g. /visualizer?algo=bfs)
   useEffect(() => {
     const algoParam = searchParams.get('algo');
-    if (algoParam === 'bfs' || algoParam === 'dfs' || algoParam === 'dijkstra') {
+    if (algoParam === 'bfs' || algoParam === 'dijkstra') {
       setAlgorithm(algoParam);
     }
   }, [searchParams, setAlgorithm]);
 
-  const [edgeModalState, setEdgeModalState] = React.useState<{
+  // Edge weight modal state
+  const [edgeModalState, setEdgeModalState] = useState<{
     isOpen: boolean;
     edgeId: string | null;
     currentWeight: number;
@@ -70,12 +66,14 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
     currentWeight: 1,
   });
 
-  // Playback engine
+  // C++ WebAssembly playback engine hook
   const {
     currentSnapshot,
     currentStepIndex,
     totalSteps,
     isPlaying,
+    isLoadingWasm,
+    errorMessage,
     play,
     pause,
     nextStep,
@@ -126,30 +124,127 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
     );
   };
 
-  const handleResetVisualization = () => {
-    restart();
-  };
-
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden relative">
-      {/* Main Workspace: Left Sidebar + Center Canvas + Right Info Panel */}
-      <div className="flex-1 flex overflow-hidden relative">
-        <Sidebar
-          algorithm={algorithm}
-          setAlgorithm={setAlgorithm}
-          nodes={nodes}
-          edges={edges}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          sourceId={sourceId}
-          targetId={targetId}
-          setSourceId={setSourceId}
-          setTargetId={setTargetId}
-          onResetVisualization={handleResetVisualization}
-          isDirected={false}
-        />
+    <div
+      className="flex-1 flex flex-col h-[calc(100vh-68px)] overflow-hidden relative select-none"
+      style={{
+        backgroundColor: 'var(--background)',
+        color: 'var(--text-primary)',
+      }}
+    >
+      {/* Validation Banner (e.g. Negative Weights in Dijkstra) */}
+      {errorMessage && (
+        <div
+          className="px-6 py-2.5 flex items-center justify-between text-xs font-medium border-b z-30"
+          style={{
+            backgroundColor: 'var(--danger-subtle)',
+            borderColor: 'var(--danger)',
+            color: 'var(--danger)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{errorMessage}</span>
+          </div>
+          <span
+            className="text-[11px] font-mono px-2 py-0.5 rounded border"
+            style={{
+              borderColor: 'var(--danger)',
+              backgroundColor: 'var(--surface)',
+            }}
+          >
+            C++ Engine Guard
+          </span>
+        </div>
+      )}
 
-        <main className="flex-1 h-full relative">
+      {/* Mobile Drawer Bar for Small Screens */}
+      <div
+        className="flex xl:hidden items-center justify-between px-4 py-2 border-b text-xs"
+        style={{
+          backgroundColor: 'var(--surface)',
+          borderColor: 'var(--border)',
+        }}
+      >
+        <button
+          onClick={() => {
+            setMobileConfigOpen(!mobileConfigOpen);
+            setMobileInspectorOpen(false);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-medium cursor-pointer"
+          style={{
+            backgroundColor: mobileConfigOpen ? 'var(--background-secondary)' : 'var(--background)',
+            borderColor: 'var(--border-strong)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+          <span>Configuration Rail</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setMobileInspectorOpen(!mobileInspectorOpen);
+            setMobileConfigOpen(false);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border font-medium cursor-pointer"
+          style={{
+            backgroundColor: mobileInspectorOpen ? 'var(--background-secondary)' : 'var(--background)',
+            borderColor: 'var(--border-strong)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <PanelRight className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+          <span>Inspector Tabs</span>
+        </button>
+      </div>
+
+      {/* Main Workbench: Left Rail + Center Canvas + Right Inspector */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left Configuration Rail (Desktop: persistent 280px, Mobile: drawer) */}
+        <div
+          className={`
+            fixed xl:static top-[110px] xl:top-auto left-0 bottom-[76px] xl:bottom-auto z-30
+            w-80 xl:w-[280px] shrink-0 transition-transform duration-200
+            ${mobileConfigOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'}
+          `}
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderRight: '1px solid var(--border)',
+          }}
+        >
+          <Sidebar
+            algorithm={algorithm}
+            setAlgorithm={setAlgorithm}
+            nodes={nodes}
+            edges={edges}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            sourceId={sourceId}
+            targetId={targetId}
+            setSourceId={setSourceId}
+            setTargetId={setTargetId}
+            onResetVisualization={restart}
+            isDirected={false}
+          />
+        </div>
+
+        {/* Center Graph Canvas */}
+        <main className="flex-1 h-full relative overflow-hidden">
+          {isLoadingWasm && (
+            <div
+              className="absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-mono font-medium shadow-sm"
+              style={{
+                backgroundColor: 'var(--surface-elevated)',
+                borderColor: 'var(--border-strong)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--accent)' }} />
+              <span>Computing in C++ WASM...</span>
+            </div>
+          )}
+
           <GraphCanvas
             nodes={nodes}
             edges={edges}
@@ -167,15 +262,28 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
           />
         </main>
 
-        <InfoPanel
-          algorithm={algorithm}
-          snapshot={currentSnapshot}
-          currentStepIndex={currentStepIndex}
-          totalSteps={totalSteps}
-        />
+        {/* Right Inspector (Desktop: persistent 360px, Mobile: drawer) */}
+        <div
+          className={`
+            fixed xl:static top-[110px] xl:top-auto right-0 bottom-[76px] xl:bottom-auto z-30
+            w-96 xl:w-[360px] shrink-0 transition-transform duration-200
+            ${mobileInspectorOpen ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'}
+          `}
+          style={{
+            backgroundColor: 'var(--surface)',
+            borderLeft: '1px solid var(--border)',
+          }}
+        >
+          <InfoPanel
+            algorithm={algorithm}
+            snapshot={currentSnapshot}
+            currentStepIndex={currentStepIndex}
+            totalSteps={totalSteps}
+          />
+        </div>
       </div>
 
-      {/* Bottom Playback Controls */}
+      {/* Fixed Playback Dock */}
       <PlaybackBar
         currentStepIndex={currentStepIndex}
         totalSteps={totalSteps}
@@ -190,17 +298,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         setSpeedMultiplier={setSpeedMultiplier}
       />
 
-      {/* Modals */}
-      <GuideModal
-        isOpen={isGuideOpen}
-        onClose={() => setIsGuideOpen(false)}
-      />
-
-      <ComingSoonModal
-        isOpen={isComingSoonOpen}
-        onClose={() => setIsComingSoonOpen(false)}
-      />
-
+      {/* Functional Modal for Edge Weights */}
       <EdgeWeightModal
         isOpen={edgeModalState.isOpen}
         edgeId={edgeModalState.edgeId}
@@ -211,3 +309,5 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
     </div>
   );
 };
+
+export default VisualizerPage;

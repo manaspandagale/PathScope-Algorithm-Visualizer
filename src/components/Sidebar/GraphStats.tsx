@@ -12,24 +12,43 @@ export const GraphStats: React.FC<GraphStatsProps> = ({
   isDirected = false,
 }) => {
   return (
-    <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/40 space-y-2">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+    <div className="space-y-2.5">
+      <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-secondary)]">
         Graph Properties
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="flex justify-between items-center px-2.5 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-          <span className="text-slate-400">Vertices |V|</span>
-          <span className="font-mono font-bold text-slate-200">{nodeCount}</span>
+        <div
+          className="flex justify-between items-center px-3 py-2 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <span style={{ color: 'var(--text-muted)' }}>Vertices |V|</span>
+          <span className="font-mono font-bold" style={{ color: 'var(--text-primary)' }}>
+            {nodeCount}
+          </span>
         </div>
-        <div className="flex justify-between items-center px-2.5 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
-          <span className="text-slate-400">Edges |E|</span>
-          <span className="font-mono font-bold text-slate-200">{edgeCount}</span>
+        <div
+          className="flex justify-between items-center px-3 py-2 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <span style={{ color: 'var(--text-muted)' }}>Edges |E|</span>
+          <span className="font-mono font-bold" style={{ color: 'var(--text-primary)' }}>
+            {edgeCount}
+          </span>
         </div>
       </div>
-      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
-        <span>Graph Type:</span>
-        <span className="font-medium text-slate-300">
-          {isDirected ? 'Directed' : 'Undirected'}, Weighted (w ≥ 0)
+      <div
+        className="flex items-center justify-between text-xs pt-1"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        <span>Graph Model:</span>
+        <span className="font-mono font-medium" style={{ color: 'var(--text-secondary)' }}>
+          {isDirected ? 'Directed' : 'Undirected'} • w ≥ 0
         </span>
       </div>
     </div>

@@ -1,11 +1,7 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData, StepSnapshot } from '../types/graph';
-import { runBFS } from '../algorithms/bfs';
-import { runDFS } from '../algorithms/dfs';
-import { runDijkstra } from '../algorithms/dijkstra';
-import { runDAGShortestPath } from '../algorithms/dag';
-import { runFloydWarshall } from '../algorithms/floydWarshall';
+import { executeAlgorithmWasm, getWasmInitError } from '../wasm/algorithmEngine';
 
 interface UseAlgorithmPlaybackProps {
   algorithm: AlgorithmType;
@@ -24,42 +20,12 @@ export function useAlgorithmPlayback({
   targetId,
   isDirected = false,
 }: UseAlgorithmPlaybackProps) {
+  const [snapshots, setSnapshots] = useState<StepSnapshot[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1); // 0.5x, 1x, 1.5x, 2x
-
-  // Generate immutable algorithm snapshots
-  const snapshots: StepSnapshot[] = useMemo(() => {
-    if (!sourceId || !targetId || nodes.length === 0) {
-      return [];
-    }
-
-    switch (algorithm) {
-      case 'bfs':
-        return runBFS(nodes, edges, sourceId, targetId, isDirected);
-      case 'dfs':
-        return runDFS(nodes, edges, sourceId, targetId, isDirected);
-      case 'dijkstra':
-        return runDijkstra(nodes, edges, sourceId, targetId, isDirected);
-      case 'dag':
-        return runDAGShortestPath(nodes, edges, sourceId, targetId);
-      case 'floyd-warshall':
-        return runFloydWarshall(nodes, edges, sourceId, targetId, isDirected);
-      default:
-        return [];
-    }
-  }, [algorithm, nodes, edges, sourceId, targetId, isDirected]);
-
-  // Reset to step 0 when snapshots change (React pattern: adjusting state during render)
-  const [prevSnapshots, setPrevSnapshots] = useState(snapshots);
-  if (prevSnapshots !== snapshots) {
-    setPrevSnapshots(snapshots);
-    setCurrentStepIndex(0);
-    setIsPlaying(false);
-  }
-
-  const totalSteps = snapshots.length;
-  const currentSnapshot = snapshots[currentStepIndex] || null;
+  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1); // 0.5x, 1x, 1.5x, 2x, 3x
+  const [isLoadingWasm, setIsLoadingWasm] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const timerRef = useRef<number | null>(null);
 
@@ -74,6 +40,72 @@ export function useAlgorithmPlayback({
     setIsPlaying(false);
     clearTimer();
   }, [clearTimer]);
+
+  // Execute C++ WebAssembly algorithm on input changes
+  useEffect(() => {
+    let isCancelled = false;
+    clearTimer();
+
+    if (!sourceId || !targetId || nodes.length === 0) {
+      Promise.resolve().then(() => {
+        if (!isCancelled) {
+          setSnapshots([]);
+          setCurrentStepIndex(0);
+          setIsPlaying(false);
+          setErrorMessage(null);
+        }
+      });
+      return;
+    }
+
+    const runWasm = async () => {
+      setIsLoadingWasm(true);
+      setErrorMessage(null);
+
+      try {
+        const result = await executeAlgorithmWasm(
+          algorithm,
+          nodes,
+          edges,
+          sourceId,
+          targetId,
+          isDirected
+        );
+
+        if (isCancelled) return;
+
+        setSnapshots(result);
+        setCurrentStepIndex(0);
+
+        // Check if algorithm returned an invalid status snapshot
+        if (result.length > 0 && result[0].status === 'invalid') {
+          setErrorMessage(result[0].explanation);
+        } else {
+          setErrorMessage(null);
+        }
+      } catch (err: unknown) {
+        if (isCancelled) return;
+        const msg = err instanceof Error ? err.message : String(err);
+        const wasmErr = getWasmInitError();
+        setErrorMessage(wasmErr || msg);
+        setSnapshots([]);
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingWasm(false);
+        }
+      }
+    };
+
+    runWasm();
+
+    return () => {
+      isCancelled = true;
+      clearTimer();
+    };
+  }, [algorithm, nodes, edges, sourceId, targetId, isDirected, pause, clearTimer]);
+
+  const totalSteps = snapshots.length;
+  const currentSnapshot = snapshots[currentStepIndex] || null;
 
   const nextStep = useCallback(() => {
     setCurrentStepIndex((prev) => {
@@ -129,8 +161,7 @@ export function useAlgorithmPlayback({
       return;
     }
 
-    // Base delay is 800ms / speedMultiplier
-    const intervalMs = Math.max(150, Math.floor(900 / speedMultiplier));
+    const intervalMs = Math.max(120, Math.floor(900 / speedMultiplier));
 
     timerRef.current = window.setInterval(() => {
       setCurrentStepIndex((prev) => {
@@ -154,6 +185,8 @@ export function useAlgorithmPlayback({
     currentStepIndex,
     totalSteps,
     isPlaying,
+    isLoadingWasm,
+    errorMessage,
     play,
     pause,
     togglePlay,

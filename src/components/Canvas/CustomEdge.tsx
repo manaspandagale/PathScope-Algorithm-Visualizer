@@ -32,29 +32,25 @@ export const CustomEdge = memo(({
   const weight = data?.weight ?? 1;
   const state = data?.state || 'default';
 
-  let strokeColor = '#64748b'; // slate-500 for crisp visibility
-  let strokeWidth = 2.5;
+  let strokeColor = 'var(--border-strong)';
+  let strokeWidth = 2;
   let strokeDasharray = '';
-  let filter = '';
 
   if (state === 'path') {
-    strokeColor = '#10b981'; // emerald-500
-    strokeWidth = 4.5;
-    filter = 'drop-shadow(0px 0px 6px rgba(16, 185, 129, 0.8))';
-  } else if (state === 'current') {
-    strokeColor = '#f59e0b'; // amber-500
+    strokeColor = 'var(--success)';
     strokeWidth = 3.5;
-    strokeDasharray = '6 6';
-    filter = 'drop-shadow(0px 0px 6px rgba(245, 158, 11, 0.7))';
-  } else if (state === 'visited') {
-    strokeColor = '#06b6d4'; // cyan-500
+  } else if (state === 'current') {
+    strokeColor = 'var(--active-step)';
     strokeWidth = 3;
-    filter = 'drop-shadow(0px 0px 4px rgba(6, 182, 212, 0.4))';
+    strokeDasharray = '5 5';
+  } else if (state === 'visited') {
+    strokeColor = 'var(--secondary-accent)';
+    strokeWidth = 2.5;
   }
 
   if (selected) {
-    strokeColor = '#3b82f6'; // blue-500
-    strokeWidth = 3.5;
+    strokeColor = 'var(--accent)';
+    strokeWidth = 3;
   }
 
   const handleWeightClick = (e: React.MouseEvent) => {
@@ -77,8 +73,7 @@ export const CustomEdge = memo(({
           stroke: strokeColor,
           strokeWidth,
           strokeDasharray,
-          filter,
-          transition: 'stroke 0.25s, stroke-width 0.25s',
+          transition: 'stroke 0.2s, stroke-width 0.2s',
         }}
       />
       <EdgeLabelRenderer>
@@ -93,16 +88,22 @@ export const CustomEdge = memo(({
           <button
             type="button"
             onClick={handleWeightClick}
-            title="Click to edit edge weight"
-            className={`px-2.5 py-1 text-xs font-mono font-bold rounded-lg border-2 shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
-              state === 'path'
-                ? 'bg-emerald-950 border-emerald-400 text-emerald-200 ring-2 ring-emerald-500/50'
+            title="Click to edit edge weight (cost)"
+            aria-label={`Edge weight ${weight}. Click to edit.`}
+            className="px-2 py-0.5 text-xs font-mono font-bold rounded border transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+            style={{
+              backgroundColor: 'var(--surface-elevated)',
+              borderColor: state === 'path'
+                ? 'var(--success)'
                 : state === 'current'
-                ? 'bg-amber-950 border-amber-400 text-amber-200 ring-2 ring-amber-500/50'
-                : state === 'visited'
-                ? 'bg-cyan-950 border-cyan-400 text-cyan-200'
-                : 'bg-slate-900 border-slate-600 text-slate-100 hover:border-blue-400'
-            }`}
+                ? 'var(--active-step)'
+                : 'var(--border-strong)',
+              color: state === 'path'
+                ? 'var(--success)'
+                : state === 'current'
+                ? 'var(--active-step)'
+                : 'var(--text-primary)',
+            }}
           >
             {weight}
           </button>

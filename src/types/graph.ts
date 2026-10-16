@@ -1,11 +1,11 @@
-export type AlgorithmType = 'bfs' | 'dfs' | 'dijkstra' | 'dag' | 'floyd-warshall';
+export type AlgorithmType = 'bfs' | 'dijkstra';
 
 export interface GraphNodeData {
   label: string;
   isSource: boolean;
   isTarget: boolean;
   state?: 'default' | 'current' | 'visited' | 'frontier' | 'path';
-  distance?: number | null; // For Dijkstra/DAG: tentative distance
+  distance?: number | null; // For Dijkstra: tentative distance
   predecessor?: string | null;
   [key: string]: unknown;
 }
@@ -17,14 +17,9 @@ export interface GraphEdgeData {
   [key: string]: unknown;
 }
 
-export type DataStructureType = 'queue' | 'stack' | 'priorityQueue' | 'topologicalOrder' | 'matrix';
+export type DataStructureType = 'queue' | 'priorityQueue';
 
 export interface QueueItem {
-  id: string;
-  label: string;
-}
-
-export interface StackItem {
   id: string;
   label: string;
 }
@@ -33,20 +28,10 @@ export interface PriorityQueueItem {
   id: string;
   label: string;
   priority: number;
-}
-
-export interface GenericItem {
-  id: string;
-  label: string;
   extra?: string;
 }
 
-export type DataStructureItem = QueueItem | StackItem | PriorityQueueItem | GenericItem;
-
-export interface FloydMatrixCell {
-  dist: number;
-  next: string | null;
-}
+export type DataStructureItem = QueueItem | PriorityQueueItem;
 
 export interface StepSnapshot {
   stepNumber: number;
@@ -56,25 +41,17 @@ export interface StepSnapshot {
   currentEdge: { source: string; target: string } | null;
   visitedNodes: string[];
   visitedEdges: string[]; // Edge IDs
-  frontierNodes: string[]; // Nodes currently in queue/stack/priority queue/current intermediate
+  frontierNodes: string[]; // Nodes currently in queue / priority queue
   pathNodes: string[]; // Reconstructed path when found
   pathEdges: string[]; // Reconstructed path edge IDs
-  distances: Record<string, number>; // Tentative distances (Dijkstra, DAG)
+  distances: Record<string, number>; // Tentative distances
   predecessors: Record<string, string | null>; // Predecessor mapping
-  traversalOrder: string[]; // Order nodes were processed / topo order
+  traversalOrder: string[]; // Order nodes were processed
   dataStructure: {
     type: DataStructureType;
     items: DataStructureItem[];
   };
-  matrixState?: {
-    nodes: string[];
-    kNode: string | null; // intermediate node k being considered
-    iNode: string | null; // current source i
-    jNode: string | null; // current target j
-    distMatrix: Record<string, Record<string, number>>;
-    nextMatrix: Record<string, Record<string, string | null>>;
-  };
-  status: 'ready' | 'running' | 'found' | 'unreachable' | 'complete' | 'cycle-detected';
+  status: 'ready' | 'running' | 'found' | 'unreachable' | 'invalid';
   totalCost?: number;
   hopCount?: number;
 }

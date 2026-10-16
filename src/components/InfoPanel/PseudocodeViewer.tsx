@@ -11,39 +11,66 @@ export const PseudocodeViewer: React.FC<PseudocodeViewerProps> = ({
   activeLine,
 }) => {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 font-mono text-xs overflow-x-auto shadow-inner">
-      <div className="text-[10px] uppercase font-semibold text-slate-500 mb-2 tracking-wider flex items-center justify-between">
-        <span>Pseudocode Execution</span>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-xs font-mono">
+        <span
+          className="font-bold uppercase tracking-wider"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          {metadata.name} Pseudocode
+        </span>
         {activeLine && (
-          <span className="text-amber-400 font-bold">Line {activeLine}</span>
+          <span
+            className="px-2 py-0.5 rounded font-bold border"
+            style={{
+              backgroundColor: 'var(--active-step-subtle)',
+              borderColor: 'var(--active-step)',
+              color: 'var(--active-step)',
+            }}
+          >
+            Executing Line {activeLine}
+          </span>
         )}
       </div>
 
-      <div className="space-y-0.5">
-        {metadata.pseudocode.map((line) => {
-          const isActive = line.line === activeLine;
+      <div
+        className="rounded-md border p-3 font-mono text-xs overflow-x-auto"
+        style={{
+          backgroundColor: 'var(--background)',
+          borderColor: 'var(--border-strong)',
+        }}
+      >
+        <div className="space-y-1 min-w-max">
+          {metadata.pseudocode.map((line) => {
+            const isActive = line.line === activeLine;
 
-          return (
-            <div
-              key={line.line}
-              className={`flex items-center gap-2 px-2 py-1 rounded transition-colors duration-150 ${
-                isActive
-                  ? 'bg-amber-500/20 text-amber-200 border-l-2 border-amber-400 font-semibold'
-                  : 'text-slate-400 hover:text-slate-300'
-              }`}
-            >
-              <span className="w-5 text-right text-[10px] text-slate-600 select-none">
-                {line.line}
-              </span>
-              <span
-                style={{ paddingLeft: `${line.indent * 14}px` }}
-                className="whitespace-pre"
+            return (
+              <div
+                key={line.line}
+                className="flex items-center gap-3 px-2 py-1 rounded transition-colors"
+                style={{
+                  backgroundColor: isActive ? 'var(--active-step-subtle)' : 'transparent',
+                  borderLeft: isActive ? '3px solid var(--active-step)' : '3px solid transparent',
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: isActive ? 600 : 400,
+                }}
               >
-                {line.text}
-              </span>
-            </div>
-          );
-        })}
+                <span
+                  className="w-5 text-right text-[11px] select-none shrink-0"
+                  style={{ color: isActive ? 'var(--active-step)' : 'var(--text-muted)' }}
+                >
+                  {line.line}
+                </span>
+                <span
+                  style={{ paddingLeft: `${line.indent * 16}px` }}
+                  className="whitespace-pre text-[12.5px]"
+                >
+                  {line.text}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { StepSnapshot, AlgorithmType } from '../../types/graph';
-import { CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ArrowRight, XCircle, ShieldCheck } from 'lucide-react';
 
 interface ResultSummaryProps {
   snapshot: StepSnapshot | null;
@@ -11,75 +11,216 @@ export const ResultSummary: React.FC<ResultSummaryProps> = ({
   snapshot,
   algorithm,
 }) => {
-  if (!snapshot || (snapshot.status !== 'found' && snapshot.status !== 'unreachable')) {
-    return null;
+  if (!snapshot) {
+    return (
+      <div
+        className="p-6 rounded-md border text-center text-xs"
+        style={{
+          backgroundColor: 'var(--surface-elevated)',
+          borderColor: 'var(--border)',
+          color: 'var(--text-muted)',
+        }}
+      >
+        No execution result yet. Run the visualizer to completion to observe path discovery.
+      </div>
+    );
+  }
+
+  if (snapshot.status === 'invalid') {
+    return (
+      <div
+        className="p-4 rounded-md border text-xs space-y-2"
+        style={{
+          backgroundColor: 'var(--danger-subtle)',
+          borderColor: 'var(--danger)',
+          color: 'var(--danger)',
+        }}
+      >
+        <div className="flex items-center gap-2 font-bold">
+          <XCircle className="w-4 h-4" />
+          <span>Execution Invalidated</span>
+        </div>
+        <p className="leading-relaxed">{snapshot.explanation}</p>
+      </div>
+    );
   }
 
   if (snapshot.status === 'unreachable') {
     return (
-      <div className="p-3.5 rounded-xl border border-rose-900/60 bg-rose-950/30 text-rose-200 text-xs space-y-1.5 shadow-md">
-        <div className="flex items-center gap-1.5 font-bold text-rose-300">
-          <AlertTriangle className="w-4 h-4 text-rose-400" />
+      <div
+        className="p-4 rounded-md border text-xs space-y-2"
+        style={{
+          backgroundColor: 'var(--danger-subtle)',
+          borderColor: 'var(--danger)',
+          color: 'var(--danger)',
+        }}
+      >
+        <div className="flex items-center gap-2 font-bold">
+          <AlertTriangle className="w-4 h-4" />
           <span>Destination Unreachable</span>
         </div>
-        <p className="text-[11px] text-rose-300/80 leading-normal">
-          No connecting path exists between the chosen vertices. The graph contains multiple disconnected components.
+        <p className="leading-relaxed">
+          No valid path exists between the selected start and target vertices. The graph topology contains disconnected components.
         </p>
       </div>
     );
   }
 
+  const isPathFound = snapshot.status === 'found';
+
   return (
-    <div className="p-3.5 rounded-xl border border-emerald-900/60 bg-emerald-950/30 text-slate-200 text-xs space-y-2.5 shadow-md">
+    <div className="space-y-4">
+      {/* Header status */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+        <div
+          className="flex items-center gap-2 font-bold text-sm"
+          style={{ color: isPathFound ? 'var(--success)' : 'var(--text-primary)' }}
+        >
           <CheckCircle2 className="w-4 h-4" />
-          <span>Path Discovered</span>
+          <span>{isPathFound ? 'Optimal Path Discovered' : 'Intermediate State'}</span>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/50">
-          {algorithm === 'dijkstra'
-            ? 'Optimal Weight'
-            : algorithm === 'bfs'
-            ? 'Shortest Hops'
-            : 'Traversal Path'}
+        <span
+          className="text-xs font-mono font-medium px-2 py-0.5 rounded border"
+          style={{
+            backgroundColor: 'var(--background-secondary)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          {algorithm === 'dijkstra' ? 'Minimum Weight' : 'Minimum Hops'}
         </span>
       </div>
 
-      {/* Path sequence */}
-      <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-slate-950/80 border border-slate-800">
-        {snapshot.pathNodes.map((node, index) => (
-          <React.Fragment key={`${node}-${index}`}>
-            <span className="px-2 py-0.5 font-mono font-bold text-xs rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-              {node}
-            </span>
-            {index < snapshot.pathNodes.length - 1 && (
-              <ArrowRight className="w-3 h-3 text-slate-500" />
-            )}
-          </React.Fragment>
-        ))}
+      {/* Path sequence breadcrumbs */}
+      <div>
+        <div
+          className="text-xs font-mono font-bold uppercase tracking-wider mb-1.5"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          Path Sequence
+        </div>
+        {snapshot.pathNodes.length === 0 ? (
+          <div
+            className="p-3 rounded border text-xs font-mono italic"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Path not yet assembled
+          </div>
+        ) : (
+          <div
+            className="flex flex-wrap items-center gap-1.5 p-3 rounded-md border"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border-strong)',
+            }}
+          >
+            {snapshot.pathNodes.map((node, index) => (
+              <React.Fragment key={`${node}-${index}`}>
+                <span
+                  className="px-2.5 py-1 font-mono font-bold text-xs rounded border"
+                  style={{
+                    backgroundColor: 'var(--success-subtle)',
+                    borderColor: 'var(--success)',
+                    color: 'var(--success)',
+                  }}
+                >
+                  Vertex {node}
+                </span>
+                {index < snapshot.pathNodes.length - 1 && (
+                  <ArrowRight className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Cost & Hops Grid */}
-      <div className="grid grid-cols-2 gap-2 text-[11px]">
-        <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
-          <div className="text-slate-400">Total Weight Cost</div>
-          <div className="font-mono font-bold text-base text-emerald-300">
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div
+          className="p-3 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+            Numeric Cost (Sum w)
+          </div>
+          <div className="font-mono text-lg font-bold mt-0.5" style={{ color: 'var(--success)' }}>
             {snapshot.totalCost ?? 0}
           </div>
         </div>
-        <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
-          <div className="text-slate-400">Hop Count (Edges)</div>
-          <div className="font-mono font-bold text-base text-slate-100">
+
+        <div
+          className="p-3 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+            Edge Hops (Length)
+          </div>
+          <div className="font-mono text-lg font-bold mt-0.5" style={{ color: 'var(--text-primary)' }}>
             {snapshot.hopCount ?? Math.max(0, snapshot.pathNodes.length - 1)}
+          </div>
+        </div>
+
+        <div
+          className="p-3 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+            Settled Vertices
+          </div>
+          <div className="font-mono text-base font-bold mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            {snapshot.visitedNodes.length} nodes
+          </div>
+        </div>
+
+        <div
+          className="p-3 rounded-md border"
+          style={{
+            backgroundColor: 'var(--background)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <div className="text-[11px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+            Algorithm Model
+          </div>
+          <div className="font-mono text-xs font-semibold mt-1" style={{ color: 'var(--accent)' }}>
+            {algorithm === 'dijkstra' ? 'O((V+E) log V)' : 'O(V + E)'}
           </div>
         </div>
       </div>
 
-      {algorithm === 'dfs' && (
-        <p className="text-[10px] text-amber-300/80 bg-amber-950/40 p-2 rounded border border-amber-800/40">
-          ⚠️ Reminder: DFS does NOT guarantee the shortest path!
+      {/* Invariant guarantee note */}
+      <div
+        className="p-3 rounded-md border text-xs leading-relaxed space-y-1"
+        style={{
+          backgroundColor: 'var(--surface-elevated)',
+          borderColor: 'var(--border)',
+          color: 'var(--text-secondary)',
+        }}
+      >
+        <div className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--text-primary)' }}>
+          <ShieldCheck className="w-4 h-4" style={{ color: 'var(--secondary-accent)' }} />
+          <span>Algorithmic Invariant</span>
+        </div>
+        <p>
+          {algorithm === 'bfs'
+            ? 'BFS explores vertices layer-by-layer. It strictly guarantees minimum hops. Numeric edge weights were ignored in routing decisions.'
+            : 'Dijkstra explores in ascending order of accumulated distance. It strictly guarantees the minimum total weight sum across all valid paths.'}
         </p>
-      )}
+      </div>
     </div>
   );
 };

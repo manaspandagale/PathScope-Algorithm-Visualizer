@@ -1,6 +1,6 @@
 import React from 'react';
 import type { AlgorithmType } from '../../types/graph';
-import { Network, GitFork, Gauge, GitCommit, Grid3X3 } from 'lucide-react';
+import { Network, Gauge, Check } from 'lucide-react';
 
 interface AlgorithmSelectorProps {
   selectedAlgorithm: AlgorithmType;
@@ -19,48 +19,40 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
     icon: React.ComponentType<{ className?: string }>;
   }[] = [
     {
-      id: 'dijkstra',
-      name: "Dijkstra's Algorithm",
-      tag: 'Optimal Shortest Path (Weighted)',
-      complexity: 'O((V+E) log V)',
-      icon: Gauge,
-    },
-    {
       id: 'bfs',
       name: 'Breadth-First Search',
-      tag: 'Shortest Hops (Unweighted)',
+      tag: 'Minimum Hops (Unweighted)',
       complexity: 'O(V + E)',
       icon: Network,
     },
     {
-      id: 'dfs',
-      name: 'Depth-First Search',
-      tag: 'Deep Traversal (Not Shortest)',
-      complexity: 'O(V + E)',
-      icon: GitFork,
-    },
-    {
-      id: 'dag',
-      name: 'DAG Shortest Path',
-      tag: 'Linear Time (Directed Acyclic)',
-      complexity: 'O(V + E)',
-      icon: GitCommit,
-    },
-    {
-      id: 'floyd-warshall',
-      name: 'Floyd–Warshall',
-      tag: 'All-Pairs Shortest Path Matrix',
-      complexity: 'O(V³)',
-      icon: Grid3X3,
+      id: 'dijkstra',
+      name: "Dijkstra's Algorithm",
+      tag: 'Minimum Weight (w ≥ 0)',
+      complexity: 'O((V+E) log V)',
+      icon: Gauge,
     },
   ];
 
   return (
-    <div className="space-y-2">
-      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-        Algorithm Selection
-      </label>
-      <div className="grid grid-cols-1 gap-2">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="block text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+          Algorithm Engine
+        </label>
+        <span
+          className="text-[11px] font-mono font-medium px-2 py-0.5 rounded border"
+          style={{
+            backgroundColor: 'var(--background-secondary)',
+            borderColor: 'var(--border)',
+            color: 'var(--text-muted)',
+          }}
+        >
+          C++ WASM
+        </span>
+      </div>
+
+      <div className="space-y-2">
         {algorithms.map((algo) => {
           const isSelected = selectedAlgorithm === algo.id;
           const Icon = algo.icon;
@@ -69,31 +61,54 @@ export const AlgorithmSelector: React.FC<AlgorithmSelectorProps> = ({
             <button
               key={algo.id}
               onClick={() => onSelectAlgorithm(algo.id)}
-              className={`w-full text-left p-2.5 rounded-xl border transition-all duration-150 cursor-pointer ${
-                isSelected
-                  ? 'bg-blue-600/15 border-blue-500/80 text-white shadow-md shadow-blue-500/10'
-                  : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-850 hover:border-slate-700'
-              }`}
+              className="w-full text-left p-3 rounded-md border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] min-h-[48px]"
+              style={{
+                backgroundColor: isSelected ? 'var(--surface-elevated)' : 'var(--background)',
+                borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
+                borderWidth: isSelected ? '2px' : '1px',
+              }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div
-                    className={`p-1.5 rounded-lg shrink-0 ${
-                      isSelected
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-800 text-slate-400'
-                    }`}
+                    className="w-7 h-7 rounded flex items-center justify-center shrink-0 border"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--accent)' : 'var(--background-secondary)',
+                      borderColor: isSelected ? 'var(--accent)' : 'var(--border)',
+                      color: isSelected ? '#FFFDF8' : 'var(--text-secondary)',
+                    }}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold leading-tight">{algo.name}</div>
-                    <div className="text-[10px] text-slate-400 leading-tight">{algo.tag}</div>
+                    <div
+                      className="text-sm font-semibold leading-snug"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {algo.name}
+                    </div>
+                    <div
+                      className="text-xs leading-none mt-0.5 font-medium"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {algo.tag}
+                    </div>
                   </div>
                 </div>
-                <span className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/50 shrink-0 ml-1">
-                  {algo.complexity}
-                </span>
+
+                {isSelected ? (
+                  <Check className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
+                ) : (
+                  <span
+                    className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded border"
+                    style={{
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    {algo.complexity.split(' ')[0]}
+                  </span>
+                )}
               </div>
             </button>
           );
