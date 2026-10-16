@@ -1,279 +1,991 @@
-# PathScope — Interactive Shortest Path Algorithm Visualizer
-> **Academic Milestone 1 (50% Milestone Release)**
-> Built with **C++17**, **Emscripten (WebAssembly)**, **React 19**, **TypeScript**, **Vite 8**, **Tailwind CSS v4**, and **@xyflow/react**.
+# PathScope
 
----
+PathScope is a browser-based graph algorithm visualizer built for the Design and Analysis of Algorithms curriculum. It allows a learner to create a graph, select an algorithm, and replay every algorithmic decision as a synchronized sequence of graph states, data-structure updates, pseudocode lines, and result metrics.
 
-## 📌 Project Overview & Idea
+The project uses C++17 for algorithm execution and compiles that code to WebAssembly with Emscripten. React and TypeScript are responsible for the interface, graph editing, playback, and presentation. Algorithm decisions are not duplicated in the frontend.
 
-**PathScope** is an interactive, browser-based algorithm laboratory designed for the Computer Engineering **Design and Analysis of Algorithms (DAA)** curriculum. It bridges theoretical graph algorithms and visual intuition by demonstrating how graph traversals and priority-driven relaxations unfold step by step.
+This repository currently represents the working 50 percent milestone. The final 100 percent scope is documented separately in this README so that implemented features and planned features are never confused.
 
-Rather than relying on high-level JavaScript approximations, **all core algorithmic computations, priority-queue logic, and graph traversal decisions are executed in native C++17 compiled to WebAssembly**. React and TypeScript manage the interactive canvas, state visualization, and time-travel playback controls.
+## Table of contents
 
----
+1. [Project status](#project-status)
+2. [Problem statement](#problem-statement)
+3. [Project objectives](#project-objectives)
+4. [Current 50 percent milestone](#current-50-percent-milestone)
+5. [Final 100 percent scope](#final-100-percent-scope)
+6. [Scope comparison](#scope-comparison)
+7. [System architecture](#system-architecture)
+8. [Runtime execution pipeline](#runtime-execution-pipeline)
+9. [Build and delivery pipeline](#build-and-delivery-pipeline)
+10. [Algorithm design](#algorithm-design)
+11. [Technology stack](#technology-stack)
+12. [Application routes](#application-routes)
+13. [Repository structure](#repository-structure)
+14. [Data contracts](#data-contracts)
+15. [Installation and local development](#installation-and-local-development)
+16. [Testing strategy](#testing-strategy)
+17. [Quality attributes](#quality-attributes)
+18. [Known limitations](#known-limitations)
+19. [Roadmap](#roadmap)
+20. [Definition of completion](#definition-of-completion)
 
-## 🎯 Problem Being Solved
+## Project status
 
-In standard academic algorithm courses:
-1. Students study pseudocode for BFS and Dijkstra on paper but struggle to visualize why priority queues change tentative distances dynamically or why BFS chooses minimum hops over minimum weighted cost.
-2. Web visualizers often run JavaScript mockups where algorithm logic is obscured by UI state updates.
-3. PathScope provides deterministic, verifiable C++ execution where every algorithmic decision produces an immutable snapshot displaying active vertices, inspected edges, frontier queues/heaps, tentative distance tables, and active pseudocode lines.
+| Item | Status |
+| --- | --- |
+| Project phase | Phase 1, working 50 percent milestone |
+| Implemented algorithms | Breadth-First Search and Dijkstra's algorithm |
+| Algorithm runtime | C++17 compiled to WebAssembly |
+| Frontend | React 19 and TypeScript |
+| Graph interface | Interactive undirected weighted graph editor |
+| Automated verification | 11 native C++ tests and 19 Vitest tests |
+| Final project scope | Defined in the 100 percent scope section |
 
----
+The milestone is intentionally limited. Only functionality that is implemented, tested, and exposed in the interface is described as complete.
 
-## ⚖️ Milestone Scope: Completed (50%) vs. Future Scope
+## Problem statement
 
-This repository represents an **honest academic 50% milestone**. Unimplemented algorithms and advanced features are strictly separated and designated as future scope.
+Graph algorithms are commonly taught through pseudocode, mathematical analysis, and fixed examples. This approach explains what an algorithm should do but often does not show why a particular vertex is selected, why a distance changes, or how the underlying data structure controls execution.
 
-### ✅ Completed in this 50% Milestone
-- **Core Algorithms in C++17**:
-  - **Breadth-First Search (BFS)**: Unweighted graph traversal using a FIFO queue, finding minimum-hop shortest paths.
-  - **Dijkstra's Shortest Path Algorithm**: Greedy single-source shortest path using a Binary Min-Heap Priority Queue with tentative distance relaxation.
-- **WebAssembly Engine**:
-  - Pure C++17 compiled via Emscripten (`emcc`) using Embind.
-  - High-performance, single-boundary batched snapshot generation (`run_bfs_wasm` and `run_dijkstra_wasm`).
-  - Pre-execution validation in C++ (negative edge weight rejection for Dijkstra).
-- **Interactive Graph Canvas**:
-  - Add vertices, drag nodes, connect undirected edges, delete elements.
-  - Inline modal for editing non-negative edge weights.
-  - Multi-channel accessible state indicators (color, pulsing ring, dashed frontier border, and text badges).
-- **Pedagogical Presets (3 Focused Topologies)**:
-  1. *BFS vs Dijkstra Tradeoff*: 1 hop with cost 18 vs. 3 hops with cost 7.
-  2. *Textbook Weighted Graph*: Classic non-negative 6-node network.
-  3. *Disconnected Graph*: Unreachable destination component.
-- **Time-Travel Playback Dock**:
-  - Play, Pause, Next Step, Previous Step, Restart, Timeline Slider, and Speed Multipliers (0.5x, 1x, 1.5x, 2x, 3x).
-- **Synchronized State Inspector**:
-  - Live FIFO Queue (BFS) and Binary Min-Heap Priority Queue (Dijkstra).
-  - Tentative distance and predecessor table tracking.
-  - Active pseudocode line highlighting matching the C++ decision path.
-  - Educational step rationale for every state transition.
-- **Two-Algorithm Comparison Suite (`/compare`)**:
-  - Side-by-side benchmark of BFS and Dijkstra on the identical graph topology.
-  - Compares resulting route, hop count, total cost, explored nodes, and WASM step metrics.
-- **Automated Test Coverage**:
-  - 11 native C++ core algorithm unit tests.
-  - 19 frontend and WebAssembly integration tests via Vitest.
+Existing visualizers frequently have one or more of the following limitations:
 
-### 🔮 Future Scope — Not Implemented in this Milestone
-The following features are **intentionally deferred to Phase 2** and are not present as working options in the UI:
-- **Depth-First Search (DFS)** with LIFO stack traversal.
-- **DAG Shortest Path** using topological sorting for directed acyclic graphs.
-- **Floyd–Warshall Algorithm** for all-pairs shortest paths via dynamic programming matrix.
-- **Bellman-Ford Algorithm** for negative weight cycles.
-- **A* Search Algorithm** with heuristic evaluation.
-- **Random, Dense, and Worst-Case Graph Generators**.
-- **Challenge / Quiz Mode** for predicting next steps.
-- **JSON Graph Import & Export**.
-- **Saved Projects & Cloud Persistence**.
-- **Web Worker Background Threads** for massive graphs (1000+ nodes).
-- **Advanced Recharts Benchmarking Dashboards**.
+- They provide only fixed graphs.
+- They animate a result without exposing the intermediate algorithm state.
+- Their algorithm code is coupled directly to UI state.
+- They do not synchronize graph changes with pseudocode and data structures.
+- They make it difficult to compare minimum-hop and minimum-weight paths on the same graph.
 
----
+PathScope addresses these limitations by treating each algorithm execution as a deterministic sequence of immutable snapshots. Every snapshot contains the information needed to explain and replay one logical step.
 
-## 💡 Why BFS and Dijkstra Were Selected for Phase 1
+## Project objectives
 
-1. **Foundational DAA Contrast**: BFS and Dijkstra represent the fundamental duality between **unweighted hop-optimality** and **weighted cost-optimality**.
-2. **Pedagogical Invariant**: Demonstrating how BFS selects a 1-hop path of cost 18 while Dijkstra selects a 3-hop path of cost 7 is the primary pedagogical goal of Phase 1.
-3. **Data Structure Contrast**: Highlights the difference between a standard FIFO queue ($O(1)$ operations) and a Binary Min-Heap priority queue ($O(\log V)$ insertions and extractions).
+PathScope is designed to meet the following objectives:
 
----
+1. Make graph algorithms observable rather than presenting only their final output.
+2. Keep the algorithm engine independent from the user interface.
+3. Execute core graph logic in C++ for alignment with DAA coursework.
+4. Use WebAssembly to preserve a browser-only deployment model.
+5. Synchronize graph states, pseudocode, data structures, and explanations.
+6. Support repeatable comparisons on identical graph inputs.
+7. Validate algorithm constraints before or during execution.
+8. Maintain an explicit distinction between completed milestone work and future scope.
 
-## 🏗️ C++ & WebAssembly Architecture
+## Current 50 percent milestone
 
-```
-                 +------------------------------------------------+
-                 |       React 19 / TypeScript Presentation       |
-                 |  (Graph Canvas, Playback Dock, Inspector UI)   |
-                 +------------------------------------------------+
-                                        |
-                 [Single Batched Call: Graph, Source, Target]
-                                        v
-                 +------------------------------------------------+
-                 |       src/wasm/algorithmEngine.ts (Bridge)     |
-                 +------------------------------------------------+
-                                        |
-                            (Emscripten Embind / WASM)
-                                        v
-+----------------------------------------------------------------------------------+
-|                              C++17 Algorithm Engine                              |
-|                                                                                  |
-|  +--------------------+   +-----------------------+   +-----------------------+  |
-|  |     graph.hpp      |   |        bfs.cpp        |   |     dijkstra.cpp      |  |
-|  | - Deterministic    |   | - std::queue          |   | - Min-Heap PQ         |  |
-|  |   Adjacency List   |   | - Hop Counting        |   | - Weight Relaxation   |  |
-|  | - Undirected/Edges |   | - Immutable Snapshots |   | - Stale Entry Skip    |  |
-|  +--------------------+   +-----------------------+   +-----------------------+  |
-|                                       |                                          |
-|                          +-------------------------+                             |
-|                          |      bindings.cpp       |                             |
-|                          | - JSON Serializer       |                             |
-|                          | - StepSnapshot Vector   |                             |
-|                          +-------------------------+                             |
-+----------------------------------------------------------------------------------+
-                                        |
-                      [Immutable StepSnapshot[] Sequence]
-                                        v
-                 +------------------------------------------------+
-                 |         React Playback & State Rendering       |
-                 +------------------------------------------------+
+The current milestone establishes the complete vertical path from graph input to C++ execution and visual playback. It contains two fully working algorithms and the shared platform required for additional algorithms in Phase 2.
+
+### 1. C++ algorithm engine
+
+The current engine includes:
+
+- A reusable graph model with node, edge, adjacency, and lookup structures.
+- Deterministic neighbor ordering for reproducible playback.
+- Breadth-First Search using `std::queue`.
+- Dijkstra's algorithm using `std::priority_queue` as a min-heap.
+- Path reconstruction through predecessor relationships.
+- Input and algorithm constraint validation.
+- Snapshot recording for every meaningful execution step.
+- JSON serialization for the WebAssembly boundary.
+
+All traversal, relaxation, priority-queue, predecessor, and path-reconstruction decisions are executed in C++.
+
+### 2. WebAssembly integration
+
+The C++ engine is compiled with Emscripten and exposed through two functions:
+
+```text
+run_bfs_wasm(inputJson)
+run_dijkstra_wasm(inputJson)
 ```
 
-### Boundary Design
-- **Single-Call Invocation**: JavaScript serializes the entire graph topology, source vertex, and destination vertex into a JSON payload and passes it in one boundary crossing to C++.
-- **Zero JS Per-Node Callback**: C++ runs the algorithm to completion, records all state transitions into a `std::vector<StepSnapshot>`, and returns the complete immutable array.
-- **No Algorithm Duplication**: React does not reconstruct paths or manage priority queues.
+The frontend sends one complete graph payload to the selected function. C++ runs the algorithm to completion and returns one serialized snapshot sequence. The browser does not call into C++ separately for every vertex or edge.
 
----
+### 3. Interactive graph editor
 
-## 📁 Repository Structure
+The current editor supports:
 
+- Adding vertices.
+- Dragging and repositioning vertices.
+- Connecting vertices with undirected edges.
+- Selecting a start vertex and a destination vertex.
+- Editing non-negative edge weights.
+- Deleting graph elements.
+- Resetting the viewport and visualization state.
+- Loading curated graph presets.
+- Visual state changes for current, frontier, visited, and final-path elements.
+
+### 4. Step-by-step playback
+
+Each C++ snapshot can be replayed through:
+
+- Play and pause.
+- Previous and next step.
+- Restart.
+- Timeline seeking.
+- Adjustable playback speed.
+- Current-step and total-step indicators.
+
+Playback does not rerun the algorithm. It navigates the immutable snapshot sequence returned by WebAssembly.
+
+### 5. Synchronized inspector
+
+The inspector presents algorithm state through four views:
+
+- Explanation: a plain-language description of the current operation.
+- Pseudocode: the active pseudocode line for the current snapshot.
+- Data: queue, priority queue, distances, predecessors, and traversal state.
+- Result: final path, cost, hop count, explored vertices, and complexity information.
+
+### 6. Algorithm comparison
+
+The comparison view runs BFS and Dijkstra on the same topology and reports:
+
+- Resulting path.
+- Hop count.
+- Total numeric path cost.
+- Number of explored vertices.
+- Number of generated snapshots.
+- Time complexity.
+- Space complexity.
+- Correctness guarantee.
+
+The primary educational comparison is:
+
+- BFS minimizes the number of edges in an unweighted interpretation.
+- Dijkstra minimizes total edge weight when every edge weight is non-negative.
+
+### 7. User interface and accessibility foundation
+
+The current interface includes:
+
+- Warm beige light mode.
+- Neutral charcoal dark mode.
+- Inter for interface text.
+- JetBrains Mono for code and technical values.
+- Responsive desktop, tablet, and mobile layouts.
+- Semantic theme tokens.
+- Keyboard and focus states for interactive controls.
+- Color, border, and label differences for graph states.
+
+### 8. Current presets
+
+The current milestone includes focused examples for:
+
+- BFS versus Dijkstra path tradeoffs.
+- A standard non-negative weighted graph.
+- An unreachable destination in a disconnected graph.
+
+### 9. Current automated verification
+
+The test suite currently contains:
+
+- 11 native C++ algorithm tests.
+- 19 Vitest frontend and integration tests.
+- TypeScript checking during the production build.
+- Oxlint static analysis.
+- A complete C++ to WebAssembly production build.
+
+## Final 100 percent scope
+
+The 100 percent version completes the original five-algorithm educational platform and the remaining learning, persistence, benchmarking, and verification features.
+
+### 1. Complete syllabus algorithm set
+
+The final product will contain five algorithms:
+
+| Algorithm | Final purpose | Required visualization |
+| --- | --- | --- |
+| Breadth-First Search | Minimum-hop paths in unweighted graphs | FIFO queue, levels, visited set, predecessor map |
+| Depth-First Search | Traversal, reachability, and backtracking | LIFO stack, discovery order, backtracking path |
+| Dijkstra's algorithm | Minimum-weight path with non-negative weights | Min-heap, relaxations, distance and predecessor tables |
+| DAG shortest path | Linear-time shortest paths in directed acyclic graphs | Topological order, cycle validation, ordered relaxations |
+| Floyd-Warshall | All-pairs shortest paths | Distance matrix, intermediate vertex, updated matrix cell |
+
+The three Phase 2 algorithms will also be implemented in C++ and exposed through the same WebAssembly adapter pattern.
+
+### 2. Directed and specialized graph support
+
+The final graph model will add:
+
+- Directed and undirected graph modes.
+- Directional edge rendering.
+- Negative-weight support where the selected algorithm permits it.
+- DAG cycle validation.
+- Dense graph and matrix-oriented presets.
+- Algorithm-specific input compatibility checks.
+
+### 3. Expanded comparison suite
+
+The final comparison system will support compatible algorithm groups rather than running invalid algorithms on unsuitable graphs.
+
+It will compare:
+
+- Path and traversal results.
+- Hop count and weighted cost.
+- Explored vertices.
+- Relaxation or inspection counts.
+- Snapshot counts.
+- Observed execution time.
+- Theoretical time and space bounds.
+- Algorithm preconditions and correctness guarantees.
+
+### 4. Graph generation and experiments
+
+The final version will include deterministic generators for:
+
+- Sparse graphs.
+- Dense graphs.
+- Connected and disconnected graphs.
+- DAGs.
+- Best-case patterns.
+- Average-case patterns.
+- Worst-case teaching patterns.
+
+Generated graphs will be reproducible through a stored seed.
+
+### 5. Challenge and prediction mode
+
+Challenge mode will allow students to predict:
+
+- The next visited vertex.
+- The next queue or stack operation.
+- The next extracted priority-queue element.
+- Whether an edge will be relaxed.
+- The next Floyd-Warshall matrix update.
+
+The system will explain incorrect predictions before revealing the correct snapshot.
+
+### 6. Persistence and graph exchange
+
+The final version will support:
+
+- JSON graph import.
+- JSON graph export.
+- Local project persistence with browser storage.
+- Versioned graph-file validation.
+- Recovery from invalid or unsupported files.
+
+No account or server database is required for the defined final scope.
+
+### 7. Background benchmarking
+
+Large comparison runs will move to Web Workers so that benchmark execution does not block graph interaction or animation.
+
+The final benchmark pipeline will separate:
+
+- Interactive snapshot generation.
+- Repeated performance measurement.
+- UI rendering.
+
+### 8. Charts and experiment reporting
+
+The final comparison page will add focused charts for:
+
+- Graph size versus operations.
+- Graph density versus execution time.
+- Algorithm step counts.
+- Memory or state-size estimates.
+
+Charts will support the analysis and will not replace the underlying numeric table.
+
+### 9. Complete verification strategy
+
+The final test system will add:
+
+- Native C++ tests for DFS, DAG shortest path, and Floyd-Warshall.
+- Negative-cycle and cycle-validation tests.
+- WebAssembly contract tests for all five algorithms.
+- Browser workflow tests with Playwright.
+- Keyboard-navigation tests.
+- Responsive-layout checks.
+- Accessibility checks.
+- Import and export round-trip tests.
+
+### 10. Deployment and release readiness
+
+The final release will include:
+
+- A reproducible continuous-integration workflow.
+- Automated test, lint, typecheck, and production-build gates.
+- Static deployment to GitHub Pages or Vercel.
+- Cache policy for versioned WebAssembly assets.
+- Release notes and a final demonstration dataset.
+
+## Scope comparison
+
+| Capability | Current 50 percent milestone | Final 100 percent product |
+| --- | --- | --- |
+| Algorithms | BFS and Dijkstra | BFS, DFS, Dijkstra, DAG shortest path, Floyd-Warshall |
+| Algorithm language | C++17 | C++17 |
+| Browser integration | Emscripten WebAssembly | Emscripten WebAssembly |
+| Graph types | Undirected weighted and unweighted interpretation | Directed, undirected, weighted, unweighted, DAG, and dense graphs |
+| Graph editing | Add, move, connect, delete, edit weights | Current editor plus direction and algorithm-specific validation |
+| Playback | Full snapshot playback | Full playback for all five algorithms |
+| Data structures | FIFO queue and min-heap | Queue, stack, min-heap, topological order, and distance matrix |
+| Comparison | BFS versus Dijkstra | Compatible multi-algorithm comparison |
+| Presets | Three focused examples | At least six syllabus-aligned examples |
+| Graph generation | Not included | Sparse, dense, DAG, disconnected, and complexity-pattern generators |
+| Challenge mode | Not included | Prediction and guided feedback |
+| Import and export | Not included | Versioned JSON import and export |
+| Persistence | Session memory | Browser local storage |
+| Background processing | Main browser thread | Web Workers for benchmark workloads |
+| Charts | Numeric comparison | Numeric comparison plus focused benchmark charts |
+| Testing | C++, Vitest, lint, typecheck, build | Current checks plus full algorithm, browser, accessibility, and workflow coverage |
+| Deployment | Local production build | Automated static deployment and release workflow |
+
+## System architecture
+
+### Architectural principles
+
+The project follows these principles:
+
+1. The C++ engine is the source of truth for algorithm decisions.
+2. The TypeScript boundary is small, typed, and algorithm-independent.
+3. A complete execution crosses the JavaScript and WebAssembly boundary only once in each direction.
+4. Snapshots are immutable after creation.
+5. Playback is separate from algorithm execution.
+6. The application remains browser-only and requires no backend service.
+7. Algorithm-specific validation is performed close to the algorithm engine.
+
+### Current runtime architecture
+
+```mermaid
+flowchart LR
+    User[User] --> UI[React interface]
+    UI --> Editor[Graph editor]
+    UI --> Controls[Algorithm and playback controls]
+    Editor --> State[Typed graph state]
+    Controls --> State
+    State --> Adapter[TypeScript WebAssembly adapter]
+    Adapter --> Payload[Serialized graph payload]
+    Payload --> Bindings[Emscripten bindings]
+    Bindings --> Graph[Cpp graph model and validation]
+    Graph --> BFS[Breadth First Search]
+    Graph --> Dijkstra[Dijkstra algorithm]
+    BFS --> Recorder[Snapshot recorder]
+    Dijkstra --> Recorder
+    Recorder --> Result[Serialized snapshot sequence]
+    Result --> Adapter
+    Adapter --> Playback[React playback controller]
+    Playback --> Canvas[Graph canvas]
+    Playback --> Inspector[Explanation pseudocode and data]
+    Playback --> Summary[Result summary]
 ```
-.
-├── cpp/                           # Native C++17 Algorithm Engine
-│   ├── include/
-│   │   ├── algorithm_types.hpp    # StepSnapshot, DataStructureItem models
-│   │   ├── bfs.hpp                # BFS interface
-│   │   ├── dijkstra.hpp           # Dijkstra interface
-│   │   └── graph.hpp              # Node, Edge, Graph, and Adjacency models
-│   ├── src/
-│   │   ├── bfs.cpp                # Pure C++ BFS implementation
-│   │   ├── dijkstra.cpp           # Pure C++ Dijkstra with min-heap
-│   │   └── bindings.cpp           # Embind WASM exports and JSON serializer
-│   ├── tests/
-│   │   └── algorithm_tests.cpp    # 11 Native C++ algorithm unit tests
-│   └── CMakeLists.txt             # CMake configuration for native tests & WASM
-│
-├── scripts/
-│   ├── build-wasm.js              # Cross-platform Emscripten WASM build script
-│   └── test-cpp.js                # Native GCC test compiler and runner
-│
-├── src/
-│   ├── wasm/                      # TypeScript WebAssembly bridge
-│   │   ├── algorithmEngine.ts     # Typed module loader and executor
-│   │   └── generated/             # Generated WASM binaries and type definitions
-│   ├── types/
-│   │   └── graph.ts               # Core TypeScript data contracts
-│   ├── hooks/
-│   │   └── useAlgorithmPlayback.ts # Playback hook consuming C++ snapshots
-│   ├── components/
-│   │   ├── Canvas/                # React Flow canvas, custom nodes and edges
-│   │   ├── InfoPanel/             # Inspector, pseudocode, and data structure views
-│   │   ├── Navigation/            # TopNav, GuideModal, ComingSoonModal
-│   │   ├── Playback/              # PlaybackBar dock
-│   │   └── Sidebar/               # AlgorithmSelector, GraphTools, NodeSelector
-│   ├── pages/
-│   │   ├── HomePage.tsx           # Landing page with 50% milestone disclosure
-│   │   ├── VisualizerPage.tsx     # Full interactive visualizer workbench
-│   │   ├── ComparisonPage.tsx     # BFS vs Dijkstra benchmark suite
-│   │   ├── AlgorithmsPage.tsx     # In-depth algorithmic complexity analysis
-│   │   ├── LearnPage.tsx          # Graph theory educational fundamentals
-│   │   └── AboutPage.tsx          # Architecture, scope boundaries, and roadmap
-│   └── data/
-│       ├── algorithmsInfo.ts      # Active and future algorithm metadata
-│       └── presetGraphs.ts        # 3 Pedagogical presets
-│
-├── public/wasm/                   # Static WebAssembly assets for web deployment
-├── index.html                     # HTML root with local typography imports
-└── package.json                   # Build scripts and dependencies
+
+### Final 100 percent architecture
+
+```mermaid
+flowchart TB
+    UI[React application] --> GraphState[Graph and experiment state]
+    GraphState --> Adapter[Typed WebAssembly adapter]
+    Adapter --> Worker[Benchmark Web Worker]
+    Adapter --> Wasm[Interactive WebAssembly engine]
+    Worker --> WasmWorker[Worker WebAssembly instance]
+
+    Wasm --> Engine[Cpp algorithm engine]
+    WasmWorker --> EngineWorker[Cpp benchmark engine]
+
+    Engine --> Algorithms[BFS DFS Dijkstra DAG Floyd Warshall]
+    Engine --> Validation[Graph and algorithm validation]
+    Engine --> Snapshots[Deterministic snapshot recorder]
+
+    Snapshots --> Playback[Playback and visualization]
+    EngineWorker --> Metrics[Benchmark metrics]
+    Metrics --> Charts[Comparison tables and charts]
+
+    GraphState --> Storage[Local storage]
+    GraphState --> Exchange[JSON import and export]
+    Playback --> Challenge[Challenge and prediction mode]
 ```
 
----
+### Component responsibilities
 
-## 📊 Algorithm Theoretical Complexities
+| Layer | Responsibility |
+| --- | --- |
+| React pages | Route-level layout and feature composition |
+| React components | Graph editing, controls, inspection, results, and responsive UI |
+| Playback hook | Snapshot selection, autoplay timing, seeking, and reset behavior |
+| TypeScript data contracts | Compile-time agreement between UI and WebAssembly output |
+| WebAssembly adapter | Module loading, payload formatting, function dispatch, and result parsing |
+| Emscripten bindings | Expose C++ entry points and serialize results |
+| C++ graph model | Graph construction, adjacency data, lookup, and deterministic ordering |
+| C++ algorithms | Traversal, relaxation, validation, and path reconstruction |
+| Snapshot recorder | Store every observable algorithm transition |
+| Test layers | Verify algorithm correctness, boundary behavior, and UI integration |
 
-| Algorithm | Engine | Category | Time Complexity | Auxiliary Space | Optimality Guarantee |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Breadth-First Search (BFS)** | C++17 WASM | Unweighted Traversal | $\mathcal{O}(V + E)$ | $\mathcal{O}(V)$ | **Guarantees minimum hops** (edge count). Ignores numeric edge weights. |
-| **Dijkstra's Algorithm** | C++17 WASM | Single-Source Shortest Path | $\mathcal{O}((V + E) \log V)$ | $\mathcal{O}(V + E)$ | **Guarantees minimum total weight** for non-negative graphs ($w \ge 0$). Rejects $w < 0$. |
+## Runtime execution pipeline
 
----
+The application executes an algorithm through the following sequence:
 
-## 🛠️ Installation & Setup Prerequisites
+```mermaid
+sequenceDiagram
+    actor Learner
+    participant Canvas as React graph canvas
+    participant State as Application state
+    participant Adapter as WebAssembly adapter
+    participant Wasm as Emscripten module
+    participant Engine as Cpp algorithm engine
+    participant Playback as Playback controller
+    participant Inspector as Visual inspector
+
+    Learner->>Canvas: Create or edit graph
+    Canvas->>State: Update nodes edges source and destination
+    State->>Adapter: Execute selected algorithm
+    Adapter->>Wasm: Send one serialized graph payload
+    Wasm->>Engine: Construct graph and validate input
+    Engine->>Engine: Run algorithm and record snapshots
+    Engine-->>Wasm: Return complete snapshot sequence
+    Wasm-->>Adapter: Return serialized result
+    Adapter-->>Playback: Parse typed snapshots
+    Playback-->>Canvas: Apply current graph state
+    Playback-->>Inspector: Show explanation code data and result
+    Learner->>Playback: Play pause step or seek
+```
+
+### Input payload
+
+The TypeScript adapter sends a payload with this logical structure:
+
+```json
+{
+  "nodes": [
+    { "id": "A", "label": "A" }
+  ],
+  "edges": [
+    { "id": "A-B", "source": "A", "target": "B", "weight": 4 }
+  ],
+  "isDirected": false,
+  "sourceId": "A",
+  "targetId": "D"
+}
+```
+
+### Output snapshot sequence
+
+Each returned snapshot can contain:
+
+- Step number.
+- Active pseudocode line.
+- Human-readable explanation.
+- Current vertex and edge.
+- Visited vertices and edges.
+- Frontier vertices.
+- Current queue or priority queue.
+- Distance table.
+- Predecessor table.
+- Traversal order.
+- Reconstructed path.
+- Status, total cost, and hop count.
+
+The UI renders this data but does not recalculate it.
+
+## Build and delivery pipeline
+
+### Local build pipeline
+
+```mermaid
+flowchart LR
+    Cpp[Cpp source files] --> NativeTests[Native Cpp tests]
+    Cpp --> Emcc[Emscripten compiler]
+    Emcc --> Loader[ES module loader]
+    Emcc --> Binary[WebAssembly binary]
+    Loader --> Generated[src wasm generated]
+    Binary --> Generated
+    Generated --> Vite[Vite production bundle]
+    React[React and TypeScript] --> Typecheck[TypeScript build]
+    Typecheck --> Vite
+    Tests[Vitest integration tests] --> Gate[Quality gate]
+    NativeTests --> Gate
+    Vite --> Gate
+    Lint[Oxlint] --> Gate
+    Gate --> Dist[Deployable static assets]
+```
+
+### Intended continuous-integration pipeline for the final release
+
+```text
+Checkout
+  -> install Node dependencies
+  -> activate Emscripten
+  -> compile and run native C++ tests
+  -> compile C++ to WebAssembly
+  -> run Vitest tests
+  -> run lint and TypeScript checks
+  -> build production assets
+  -> run browser and accessibility tests
+  -> publish versioned static assets
+```
+
+## Algorithm design
+
+### Breadth-First Search
+
+Purpose:
+
+- Traverse an unweighted graph level by level.
+- Find a path containing the minimum number of edges.
+
+Core data structures:
+
+- FIFO queue.
+- Visited set.
+- Predecessor map.
+- Hop-distance map.
+
+Complexity:
+
+- Time: O(V + E).
+- Auxiliary space: O(V).
+
+Important behavior:
+
+- Numeric edge weights do not influence BFS decisions.
+- A vertex is marked when discovered to avoid repeated insertion.
+- The predecessor map reconstructs the final path.
+- Disconnected destinations return an unreachable result.
+
+### Dijkstra's algorithm
+
+Purpose:
+
+- Find the minimum-total-weight path from a source to a destination.
+
+Core data structures:
+
+- Adjacency list.
+- Binary min-heap priority queue.
+- Tentative-distance map.
+- Predecessor map.
+- Settled or visited set.
+
+Complexity:
+
+- Time: O((V + E) log V).
+- Practical storage: O(V + E), including the graph representation and algorithm state.
+
+Important behavior:
+
+- All edge weights must be non-negative.
+- Relaxation updates a distance only when a lower-cost path is found.
+- Stale priority-queue entries are skipped.
+- The predecessor map reconstructs the optimal path.
+- Invalid negative-weight input returns an invalid result instead of a misleading path.
+
+## Technology stack
+
+| Area | Technology | Role in the project |
+| --- | --- | --- |
+| Algorithm language | C++17 | Graph representation, validation, BFS, Dijkstra, path reconstruction, snapshots |
+| Browser compilation | Emscripten and Embind | Compile C++ into WebAssembly and expose typed entry points |
+| WebAssembly runtime | Browser WebAssembly | Execute the C++ algorithm engine locally in the browser |
+| UI framework | React 19 | Component model, application state, and rendering |
+| Frontend language | TypeScript 6 | Typed graph contracts, adapter, playback, and interface logic |
+| Build tool | Vite 8 | Development server, module transformation, and production bundling |
+| Styling | Tailwind CSS 4 and CSS variables | Responsive layouts and semantic theming |
+| Graph canvas | React Flow from `@xyflow/react` | Node and edge editing, viewport controls, and custom graph rendering |
+| Icons | Lucide React | Consistent interface icons |
+| Interface font | Inter Variable | Navigation, headings, body text, and controls |
+| Technical font | JetBrains Mono Variable | Pseudocode, weights, distances, and complexity notation |
+| Frontend tests | Vitest | TypeScript, adapter, and integration verification |
+| Native tests | C++ test executable | Direct algorithm correctness verification without the browser |
+| Static analysis | Oxlint | React and TypeScript linting |
+| Native build configuration | CMake | Portable C++ test and Emscripten target configuration |
+
+## Application routes
+
+| Route | Purpose | Current status |
+| --- | --- | --- |
+| `/` | Project introduction and algorithm overview | Implemented |
+| `/visualizer` | Graph editor, C++ execution, playback, and inspection | Implemented |
+| `/compare` | BFS and Dijkstra comparison | Implemented |
+| `/about` | Architecture, milestone status, and roadmap | Implemented |
+
+## Repository structure
+
+```text
+PathScope-Algorithm-Visualizer
+|
+|-- cpp
+|   |-- include
+|   |   |-- algorithm_types.hpp
+|   |   |-- bfs.hpp
+|   |   |-- dijkstra.hpp
+|   |   `-- graph.hpp
+|   |-- src
+|   |   |-- bfs.cpp
+|   |   |-- dijkstra.cpp
+|   |   `-- bindings.cpp
+|   |-- tests
+|   |   `-- algorithm_tests.cpp
+|   `-- CMakeLists.txt
+|
+|-- scripts
+|   |-- build-wasm.js
+|   `-- test-cpp.js
+|
+|-- public
+|   `-- wasm
+|       |-- algorithm_wasm.js
+|       |-- algorithm_wasm.wasm
+|       `-- algorithm_wasm.d.ts
+|
+|-- src
+|   |-- components
+|   |   |-- Canvas
+|   |   |-- InfoPanel
+|   |   |-- Navigation
+|   |   |-- Playback
+|   |   `-- Sidebar
+|   |-- data
+|   |   |-- algorithmsInfo.ts
+|   |   `-- presetGraphs.ts
+|   |-- hooks
+|   |   `-- useAlgorithmPlayback.ts
+|   |-- pages
+|   |   |-- HomePage.tsx
+|   |   |-- VisualizerPage.tsx
+|   |   |-- ComparisonPage.tsx
+|   |   `-- AboutPage.tsx
+|   |-- tests
+|   |   |-- bfs.test.ts
+|   |   |-- dijkstra.test.ts
+|   |   |-- integration.test.ts
+|   |   `-- priorityQueue.test.ts
+|   |-- types
+|   |   `-- graph.ts
+|   |-- wasm
+|   |   |-- algorithmEngine.ts
+|   |   `-- generated
+|   |-- App.tsx
+|   |-- index.css
+|   `-- main.tsx
+|
+|-- daa cp.pdf
+|-- package.json
+|-- vite.config.ts
+|-- tsconfig.json
+`-- README.md
+```
+
+Generated WebAssembly files are committed so that the current milestone can run without requiring every reviewer to compile C++ before opening the frontend. Contributors who change C++ code must regenerate these files.
+
+## Data contracts
+
+### Graph node
+
+Each node contains:
+
+- Stable identifier.
+- Display label.
+- Source and destination state.
+- Optional visualization state.
+- Optional distance and predecessor values.
+
+### Graph edge
+
+Each edge contains:
+
+- Stable identifier.
+- Source and target identifiers.
+- Numeric weight.
+- Direction metadata.
+- Optional visualization state.
+
+### Step snapshot
+
+`StepSnapshot` is the central contract between the algorithm engine and the interface. It contains all information required to render one point in the execution without rerunning any algorithm logic in TypeScript.
+
+The TypeScript definition is maintained in `src/types/graph.ts`, while the corresponding C++ model is maintained in `cpp/include/algorithm_types.hpp`.
+
+When the contract changes, both definitions, the serializer, integration tests, and generated WebAssembly artifacts must be updated together.
+
+## Installation and local development
 
 ### Prerequisites
-1. **Node.js**: v18 or higher (v20+ recommended).
-2. **C++17 Compiler**: GCC / MinGW / Clang (for native C++ unit tests).
-3. **Emscripten SDK (`emsdk`)**: For compiling C++ to WebAssembly.
 
-### Emscripten Setup
-If Emscripten is not already installed on your system:
+Install the following tools:
+
+- Node.js 20 or later is recommended.
+- npm.
+- A C++17 compiler such as GCC, MinGW, or Clang.
+- Emscripten SDK for rebuilding the WebAssembly module.
+
+### Clone the repository
+
+```bash
+git clone https://github.com/manaspandagale/PathScope-Algorithm-Visualizer.git
+cd PathScope-Algorithm-Visualizer
+```
+
+### Install frontend dependencies
+
+```bash
+npm install
+```
+
+### Install and activate Emscripten
+
 ```bash
 git clone https://github.com/emscripten-core/emsdk.git
 cd emsdk
 ./emsdk install latest
 ./emsdk activate latest
-# On Windows PowerShell:
+```
+
+On PowerShell, load the Emscripten environment with:
+
+```powershell
 .\emsdk_env.ps1
 ```
 
----
+Return to the PathScope repository before running project commands.
 
-## 🚀 Development & Build Commands
+### Rebuild WebAssembly
 
-### 1. Install Node Dependencies
-```bash
-npm install
-```
+Run this command after changing any file under `cpp/include` or `cpp/src`:
 
-### 2. Compile C++ to WebAssembly
 ```bash
 npm run build:wasm
 ```
-*Compiles `cpp/src/*.cpp` into `src/wasm/generated/algorithm_wasm.js` and `.wasm` and synchronizes artifacts to `public/wasm/`.*
 
-### 3. Run Automated Tests
+This command:
+
+1. Finds the active `emcc` executable.
+2. Compiles the C++17 algorithm sources with optimization enabled.
+3. Produces an ES module loader and WebAssembly binary.
+4. Writes generated assets under `src/wasm/generated`.
+5. Synchronizes the browser assets to `public/wasm`.
+
+### Start the development server
+
 ```bash
-npm run test
+npm run dev
 ```
-*Compiles and runs the 11 native C++ core algorithm tests, followed by the 19 Vitest integration tests (30 total tests).*
 
-To run only the native C++ unit tests:
+Open `http://localhost:5173`.
+
+### Run native C++ tests only
+
 ```bash
 npm run test:cpp
 ```
 
-### 4. Code Quality & Linting
+### Run the complete automated test suite
+
+```bash
+npm test
+```
+
+### Run lint
+
 ```bash
 npm run lint
 ```
-*Evaluates frontend TypeScript and React code using Oxlint (0 errors, 0 warnings).*
 
-### 5. Production Build
+### Create a production build
+
 ```bash
 npm run build
 ```
-*Automatically triggers `build:wasm`, runs TypeScript typechecking (`tsc -b`), and bundles production assets via Vite.*
 
-### 6. Start Development Server
+The production command rebuilds WebAssembly, runs TypeScript project compilation, and bundles the application with Vite.
+
+### Preview the production build
+
 ```bash
-npm run dev
+npm run preview
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
----
+## Testing strategy
 
-## 📸 Interface Screenshots
+### Native C++ tests
 
-| Screen | View | Description |
-| :--- | :--- | :--- |
-| **Home Page** | `/` | Concise project explanation, 50% milestone disclosure, and BFS & Dijkstra cards. |
-| **Visualizer Workbench** | `/visualizer` | Interactive canvas with custom node badges, playback dock, FIFO queue, and min-heap inspector. |
-| **Algorithm Comparison** | `/compare` | Side-by-side benchmark contrasting minimum hops vs. minimum total weight on identical graphs. |
-| **Algorithms In-Depth** | `/algorithms` | Detailed mathematical formulations, pseudocode, and real-world software applications. |
-| **About & Roadmap** | `/about` | Complete audit of completed features versus deferred Phase 2 scope. |
+The native suite verifies the algorithm engine independently of React and WebAssembly.
 
----
+Current coverage includes:
 
-## ⚠️ Known Limitations
+- BFS minimum-hop behavior.
+- BFS disconnected graph handling.
+- BFS source-equals-destination behavior.
+- BFS cycle handling.
+- BFS deterministic execution.
+- Dijkstra minimum-weight behavior.
+- Dijkstra selection of a cheaper multi-hop path.
+- Dijkstra disconnected graph handling.
+- Dijkstra source-equals-destination behavior.
+- Dijkstra stale priority-queue entry handling.
+- Dijkstra negative-weight rejection.
 
-1. **Non-Negative Weights**: Dijkstra strictly requires $w \ge 0$. If an edge with $w < 0$ is introduced, the C++ engine rejects the graph before execution and alerts the user. Negative weight graphs require Bellman-Ford (planned for Phase 2).
-2. **Algorithm Scope**: Only BFS and Dijkstra are implemented. Selecting or configuring DFS, DAG, or Floyd–Warshall is unavailable in this milestone.
-3. **Graph Persistence**: Graphs are maintained in client memory during the session; JSON file saving and local storage persistence are deferred to Phase 2.
+### Frontend and integration tests
 
----
+The Vitest suite verifies:
 
-## 📄 License & Coursework Notice
+- TypeScript-facing BFS results.
+- TypeScript-facing Dijkstra results.
+- Priority-queue behavior.
+- WebAssembly payload and result integration.
+- Snapshot contract expectations.
 
-Developed for the **Design and Analysis of Algorithms (DAA)** coursework.
-Academic Milestone 1 (50% Milestone Release).
+### Required quality gate
+
+Before merging a change, run:
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+A change is ready only when all three commands succeed.
+
+## Quality attributes
+
+### Correctness
+
+- The native C++ layer is tested independently.
+- Unsupported negative weights are rejected for Dijkstra.
+- Source, destination, and reachability cases are explicit.
+- Deterministic ordering makes executions reproducible.
+
+### Separation of concerns
+
+- C++ owns algorithm decisions.
+- The adapter owns serialization and module access.
+- The playback hook owns time navigation.
+- Components own presentation only.
+
+### Performance
+
+- The complete graph enters WebAssembly in one call.
+- The complete snapshot sequence returns in one call.
+- There are no JavaScript callbacks for each vertex or edge.
+- WebAssembly is compiled with optimization and memory growth enabled.
+
+### Privacy
+
+- Graph data is processed on the user's device.
+- The current system has no backend API.
+- The current system sends no graph data to a remote service.
+
+### Accessibility
+
+- Light and dark themes use semantic color tokens.
+- Important states are not communicated through color alone.
+- Interactive controls include visible focus behavior.
+- Layouts adapt for desktop, tablet, and mobile use.
+
+### Maintainability
+
+- Shared TypeScript contracts define the UI boundary.
+- C++ headers separate graph and algorithm models.
+- Build scripts provide repeatable native and WebAssembly compilation.
+- Current and future scope are documented separately.
+
+## Known limitations
+
+The 50 percent milestone has the following intentional limitations:
+
+1. Only BFS and Dijkstra are implemented.
+2. The visual editor currently operates as an undirected graph experience.
+3. Dijkstra does not accept negative edge weights.
+4. Graphs are not persisted after the session ends.
+5. JSON import and export are not available.
+6. Challenge mode is not available.
+7. Automated random graph generation is not available.
+8. Benchmark execution does not yet use Web Workers.
+9. The comparison view includes only BFS and Dijkstra.
+10. Browser end-to-end and automated accessibility suites are planned for Phase 2.
+
+These are scope decisions, not claims of completed functionality.
+
+## Roadmap
+
+### Phase 1: Foundation, 0 to 25 percent
+
+- Define graph and snapshot contracts.
+- Establish React and TypeScript application structure.
+- Build the interactive graph canvas.
+- Establish the C++ project layout.
+- Configure Emscripten compilation.
+
+Status: complete.
+
+### Phase 2: Working milestone, 25 to 50 percent
+
+- Implement BFS in C++.
+- Implement Dijkstra in C++.
+- Connect C++ to React through WebAssembly.
+- Implement playback and the synchronized inspector.
+- Implement BFS versus Dijkstra comparison.
+- Add native and integration tests.
+- Complete the responsive light and dark interface foundation.
+
+Status: complete in the current repository.
+
+### Phase 3: Algorithm completion, 50 to 75 percent
+
+- Implement DFS in C++.
+- Implement DAG shortest path in C++.
+- Implement Floyd-Warshall in C++.
+- Add directed graph behavior and validation.
+- Add stack, topological-order, and matrix inspectors.
+- Expand presets and comparison compatibility rules.
+
+Status: planned.
+
+### Phase 4: Learning platform completion, 75 to 100 percent
+
+- Add graph generators.
+- Add challenge and prediction mode.
+- Add JSON import and export.
+- Add browser persistence.
+- Add Web Worker benchmarking.
+- Add focused charts and experiment reports.
+- Add Playwright workflows and accessibility checks.
+- Add continuous integration and static deployment.
+- Complete final documentation and demonstration assets.
+
+Status: planned.
+
+### Post-project extensions
+
+The following ideas are outside the defined 100 percent coursework scope:
+
+- Bellman-Ford.
+- A-star search.
+- User accounts.
+- Cloud synchronization.
+- Collaborative graph editing.
+- Server-side project storage.
+
+## Definition of completion
+
+### Current 50 percent milestone is complete when
+
+- BFS runs from C++ through WebAssembly.
+- Dijkstra runs from C++ through WebAssembly.
+- No TypeScript algorithm duplicate is used for execution.
+- Graph editing and endpoint selection work.
+- Playback can play, pause, restart, step, and seek.
+- Pseudocode and data structures remain synchronized with snapshots.
+- BFS and Dijkstra can be compared on the same graph.
+- Invalid and unreachable states are handled.
+- Native tests, Vitest, lint, and production build pass.
+
+The repository currently meets these criteria.
+
+### Final 100 percent product is complete when
+
+- All five syllabus algorithms run from C++ through WebAssembly.
+- Directed, undirected, weighted, unweighted, DAG, and matrix use cases are supported.
+- Every algorithm has synchronized playback and a relevant data-structure view.
+- Comparison mode enforces algorithm compatibility.
+- Graph generators, challenge mode, import, export, and persistence work.
+- Benchmark workloads can run without blocking the interface.
+- Native, integration, browser, responsive, and accessibility checks pass.
+- The application is deployed through a reproducible release pipeline.
+- Documentation and demonstration material describe only verified behavior.
+
+## Academic context
+
+PathScope is developed as a Design and Analysis of Algorithms course project. The current repository is the Phase 1 working milestone and is not presented as the finished five-algorithm platform.
