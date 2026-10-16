@@ -38,7 +38,7 @@ This repository currently represents the working 50 percent milestone. The final
 | Algorithm runtime | C++17 compiled to WebAssembly |
 | Frontend | React 19 and TypeScript |
 | Graph interface | Interactive undirected weighted graph editor |
-| Automated verification | 11 native C++ tests and 19 Vitest tests |
+| Automated verification | 11 native C++ tests and 30 Vitest tests (including browser smoke tests) |
 | Final project scope | Defined in the 100 percent scope section |
 
 The milestone is intentionally limited. Only functionality that is implemented, tested, and exposed in the interface is described as complete.
@@ -825,6 +825,17 @@ The Vitest suite verifies:
 - Priority-queue behavior.
 - WebAssembly payload and result integration.
 - Snapshot contract expectations.
+- Focused browser smoke tests covering Home navigation, BFS/Dijkstra execution, playback controls (play, pause, next, previous, seek, reset), preset loading, endpoint selection, comparison benchmarks, About documentation, and light/dark theme switching.
+
+### Continuous integration
+
+A GitHub Actions workflow (`.github/workflows/ci.yml`) automatically validates every push and pull request across:
+
+1. Clean dependency installation (`npm ci`).
+2. Native C++ algorithm unit tests (`node scripts/test-cpp.js`).
+3. Frontend and WASM integration tests (`npx vitest run`).
+4. Static code analysis and linting (`npm run lint`).
+5. WebAssembly compilation and production bundle build (`npm run build`).
 
 ### Required quality gate
 

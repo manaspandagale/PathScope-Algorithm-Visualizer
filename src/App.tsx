@@ -4,10 +4,12 @@ import type { Node, Edge } from '@xyflow/react';
 import type { AlgorithmType, GraphNodeData, GraphEdgeData } from './types/graph';
 import { PRESET_GRAPHS } from './data/presetGraphs';
 import { TopNav } from './components/Navigation/TopNav';
-import { HomePage } from './pages/HomePage';
-import { VisualizerPage } from './pages/VisualizerPage';
-import { ComparisonPage } from './pages/ComparisonPage';
-import { AboutPage } from './pages/AboutPage';
+
+// Route-level code splitting for production bundle optimization
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const VisualizerPage = React.lazy(() => import('./pages/VisualizerPage'));
+const ComparisonPage = React.lazy(() => import('./pages/ComparisonPage'));
+const AboutPage = React.lazy(() => import('./pages/AboutPage'));
 
 export const App: React.FC = () => {
   // Theme state with localStorage persistence and prefers-color-scheme check
@@ -59,37 +61,51 @@ export const App: React.FC = () => {
           toggleTheme={toggleTheme}
         />
 
-        {/* Primary Page Routes */}
+        {/* Primary Page Routes with Suspense Boundary */}
         <div className="flex-1 overflow-hidden relative">
-          <Routes>
-            <Route path="/" element={<HomePage theme={theme} />} />
-            <Route
-              path="/visualizer"
-              element={
-                <VisualizerPage
-                  theme={theme}
-                  nodes={nodes}
-                  setNodes={setNodes}
-                  edges={edges}
-                  setEdges={setEdges}
-                  sourceId={sourceId}
-                  setSourceId={setSourceId}
-                  targetId={targetId}
-                  setTargetId={setTargetId}
-                  algorithm={algorithm}
-                  setAlgorithm={setAlgorithm}
-                  selectedNodeId={selectedNodeId}
-                  setSelectedNodeId={setSelectedNodeId}
-                />
-              }
-            />
-            <Route path="/compare" element={<ComparisonPage theme={theme} />} />
-            <Route path="/about" element={<AboutPage theme={theme} />} />
-            {/* Redirect any legacy routes to visualizer or home */}
-            <Route path="/algorithms" element={<Navigate to="/visualizer" replace />} />
-            <Route path="/learn" element={<Navigate to="/about" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <React.Suspense
+            fallback={
+              <div
+                className="w-full h-full flex items-center justify-center text-sm font-medium"
+                style={{
+                  backgroundColor: 'var(--background)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                Loading...
+              </div>
+            }
+          >
+            <Routes>
+              <Route path="/" element={<HomePage theme={theme} />} />
+              <Route
+                path="/visualizer"
+                element={
+                  <VisualizerPage
+                    theme={theme}
+                    nodes={nodes}
+                    setNodes={setNodes}
+                    edges={edges}
+                    setEdges={setEdges}
+                    sourceId={sourceId}
+                    setSourceId={setSourceId}
+                    targetId={targetId}
+                    setTargetId={setTargetId}
+                    algorithm={algorithm}
+                    setAlgorithm={setAlgorithm}
+                    selectedNodeId={selectedNodeId}
+                    setSelectedNodeId={setSelectedNodeId}
+                  />
+                }
+              />
+              <Route path="/compare" element={<ComparisonPage theme={theme} />} />
+              <Route path="/about" element={<AboutPage theme={theme} />} />
+              {/* Redirect any legacy routes to visualizer or home */}
+              <Route path="/algorithms" element={<Navigate to="/visualizer" replace />} />
+              <Route path="/learn" element={<Navigate to="/about" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </React.Suspense>
         </div>
       </div>
     </BrowserRouter>

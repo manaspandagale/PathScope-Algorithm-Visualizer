@@ -26,7 +26,23 @@ export async function getWasmModule(): Promise<PathScopeWasmModule> {
     try {
       // Dynamic import of generated WebAssembly loader
       const loadModule = (await import('./generated/algorithm_wasm.js')).default;
-      const mod = await loadModule();
+      const moduleOptions: Record<string, unknown> = {};
+
+      // If running inside Node or jsdom test runner, provide preloaded binary
+      if (typeof process !== 'undefined' && process.versions?.node) {
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const wasmFile = path.resolve(process.cwd(), 'src', 'wasm', 'generated', 'algorithm_wasm.wasm');
+          if (fs.existsSync(wasmFile)) {
+            moduleOptions.wasmBinary = fs.readFileSync(wasmFile);
+          }
+        } catch {
+          // Fall back to default loader behavior
+        }
+      }
+
+      const mod = await loadModule(moduleOptions);
       wasmModuleInstance = mod as PathScopeWasmModule;
       wasmInitError = null;
       return wasmModuleInstance;

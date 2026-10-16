@@ -47,7 +47,7 @@ const dtsContent = `export interface PathScopeWasmModule {
   run_dijkstra_wasm: (inputJson: string) => string;
 }
 
-declare function loadModule(): Promise<PathScopeWasmModule>;
+declare function loadModule(moduleOptions?: Record<string, unknown>): Promise<PathScopeWasmModule>;
 export default loadModule;
 `;
 fs.writeFileSync(path.join(outDir, 'algorithm_wasm.d.ts'), dtsContent);
