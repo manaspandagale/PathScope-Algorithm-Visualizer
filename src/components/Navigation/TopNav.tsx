@@ -73,20 +73,16 @@ export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
           <PathScopeLogo size={30} />
         </Link>
 
-        {/* Academic Laboratory Badge */}
-        <div
-          className="hidden lg:inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[11px] font-mono tracking-wider uppercase border"
+        {/* Secondary Laboratory Descriptor */}
+        <span
+          className="hidden lg:inline-block text-[11px] font-mono tracking-wider uppercase opacity-60 pl-2 border-l"
           style={{
-            backgroundColor: 'var(--glass-nav-bg)',
             borderColor: 'var(--border)',
             color: 'var(--text-muted)',
           }}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-action)] animate-pulse" />
-          <span>DAA LAB</span>
-          <span className="opacity-40">•</span>
-          <span>50% MILESTONE</span>
-        </div>
+          Algorithm Laboratory
+        </span>
       </div>
 
       {/* Desktop Coordinated Liquid-Glass Navigation Island */}

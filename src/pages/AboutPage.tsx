@@ -41,7 +41,7 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
             className="mt-2 text-base leading-relaxed"
             style={{ color: 'var(--text-secondary)' }}
           >
-            An interactive educational laboratory designed for rigorous study of graph shortest path algorithms through deterministic, step-by-step state inspection.
+            An interactive educational laboratory designed for rigorous study of graph shortest path algorithms through deterministic, step-by-step state inspection. PathScope Phase 1 implements BFS and Dijkstra through a C++17 WebAssembly engine.
           </p>
         </header>
 
@@ -130,63 +130,32 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
           </div>
         </section>
 
-        {/* 4. Current 50% Milestone & Roadmap */}
-        <section className="space-y-4 pt-2">
+        {/* 4. Implemented Capabilities */}
+        <section className="space-y-3 pt-2">
           <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Completed milestone
+            Implemented capabilities
           </h2>
 
-          <div className="space-y-3">
-            <div
-              className="p-4 rounded-xl border"
-              style={{
-                backgroundColor: 'var(--surface)',
-                borderColor: 'var(--border)',
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-sm text-[var(--primary-action)]">
-                  Completed 50% Milestone (Current Production Release)
-                </span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[var(--primary-subtle)] text-[var(--primary-action)] font-bold">
-                  100% Verified
-                </span>
-              </div>
-              <ul className="list-disc pl-5 text-xs space-y-1.5 text-[var(--text-secondary)]">
-                <li>Native C++17 canonical engines for BFS and Dijkstra.</li>
-                <li>Bidirectional WebAssembly bridge with batch snapshot memory serialization.</li>
-                <li>Interactive graph canvas with custom node geometry and weighted edges.</li>
-                <li>Coordinated transport playback dock with scrub slider and speed multiplier.</li>
-                <li>Educational inspector with synchronized pseudocode, explanation, and data structures.</li>
-                <li>Benchmark comparison tool with side-by-side metric analytics.</li>
-              </ul>
-            </div>
-
-            <div
-              className="p-4 rounded-xl border"
-              style={{
-                backgroundColor: 'var(--background-secondary)',
-                borderColor: 'var(--border)',
-                opacity: 0.85,
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-sm text-[var(--text-muted)]">
-                  Future scope
-                </span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)]">
-                  Future Work
-                </span>
-              </div>
-              <ul className="list-disc pl-5 text-xs space-y-1.5 text-[var(--text-muted)]">
-                <li>Depth-First Search (DFS) with recursion call-stack inspection.</li>
-                <li>Bellman-Ford algorithm with negative edge detection and arbitrary cycles.</li>
-                <li>Floyd-Warshall all-pairs dynamic programming matrix.</li>
-                <li>DAG shortest path and topological ordering visualizer.</li>
-                <li>A* heuristic search with Euclidean distance estimators.</li>
-              </ul>
-            </div>
+          <div
+            className="p-4 rounded-xl border"
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderColor: 'var(--border)',
+            }}
+          >
+            <ul className="list-disc pl-5 text-xs sm:text-sm space-y-2 text-[var(--text-secondary)]">
+              <li>Canonical C++17 implementations of Breadth-First Search and Dijkstra’s Algorithm.</li>
+              <li>Bidirectional WebAssembly bridge with batch snapshot memory serialization.</li>
+              <li>Interactive graph canvas with custom node placement, weighted edges, and topology presets.</li>
+              <li>Coordinated transport playback controls with scrub slider and speed multiplier.</li>
+              <li>Educational inspector with synchronized pseudocode, state explanation, and data structures.</li>
+              <li>Side-by-side benchmark comparison analyzing hop count versus cumulative path weight.</li>
+            </ul>
           </div>
+
+          <p className="text-xs text-[var(--text-muted)] italic">
+            This release intentionally focuses on BFS and Dijkstra as the completed Phase 1 milestone.
+          </p>
         </section>
 
         {/* Footer CTA */}

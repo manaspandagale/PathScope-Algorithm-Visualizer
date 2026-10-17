@@ -118,7 +118,7 @@ export async function executeAlgorithmWasm(
 
   if (algorithm !== 'bfs' && algorithm !== 'dijkstra') {
     throw new Error(
-      `Algorithm '${algorithm}' is not supported in this 50% milestone. Only 'bfs' and 'dijkstra' are implemented in C++.`
+      `Algorithm '${algorithm}' is not supported. Only 'bfs' and 'dijkstra' are implemented in C++.`
     );
   }
 

@@ -33,7 +33,7 @@ beforeEach(() => {
   };
 });
 
-describe('Focused Browser Smoke Tests (50% Milestone)', () => {
+describe('Focused Browser Smoke Tests (Phase 1)', () => {
   /* -------------------------------------------------------------
    * 1. Home Page Navigation & Content
    * ------------------------------------------------------------- */
@@ -339,7 +339,7 @@ describe('Focused Browser Smoke Tests (50% Milestone)', () => {
     expect(screen.getByText('What PathScope does')).toBeDefined();
     expect(screen.getByText('Why BFS and Dijkstra were selected')).toBeDefined();
     expect(screen.getByText('C++ and WebAssembly architecture')).toBeDefined();
-    expect(screen.getByText('Completed milestone')).toBeDefined();
-    expect(screen.getByText('Future scope')).toBeDefined();
+    expect(screen.getByText('Implemented capabilities')).toBeDefined();
+    expect(screen.getByText(/This release intentionally focuses on BFS and Dijkstra as the completed Phase 1 milestone./i)).toBeDefined();
   });
 });

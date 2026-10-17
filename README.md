@@ -38,7 +38,7 @@ This repository currently represents the working 50 percent milestone. The final
 | Algorithm runtime | C++17 compiled to WebAssembly |
 | Frontend | React 19 and TypeScript |
 | Graph interface | Interactive undirected weighted graph editor |
-| Automated verification | 11 native C++ tests and 31 Vitest tests (including browser smoke and playback integration tests) |
+| Automated verification | 11 native C++ tests and 28 Vitest tests (including browser smoke and playback integration tests) |
 | Final project scope | Defined in the 100 percent scope section |
 
 The milestone is intentionally limited. Only functionality that is implemented, tested, and exposed in the interface is described as complete.
@@ -650,7 +650,8 @@ PathScope-Algorithm-Visualizer
 |   |   |-- bfs.test.ts
 |   |   |-- dijkstra.test.ts
 |   |   |-- integration.test.ts
-|   |   `-- priorityQueue.test.ts
+|   |   |-- playbackIntegration.test.tsx
+|   |   `-- smoke.test.tsx
 |   |-- types
 |   |   `-- graph.ts
 |   |-- wasm

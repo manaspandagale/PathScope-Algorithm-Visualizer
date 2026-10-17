@@ -28,7 +28,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
           }}
         >
           <PathScopeLogo size={14} showText={false} />
-          <span>Interactive DAA Laboratory • 50% Milestone</span>
+          <span>Interactive Graph Algorithm Laboratory</span>
         </div>
 
         <h1
