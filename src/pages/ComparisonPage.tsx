@@ -180,7 +180,7 @@ export const ComparisonPage: React.FC<ComparisonPageProps> = () => {
             </span>
           </div>
           <h1
-            className="text-3xl sm:text-4xl font-bold tracking-tight"
+            className="text-2xl sm:text-3xl font-heading font-[750] tracking-[-0.025em] leading-tight"
             style={{ color: 'var(--text-primary)' }}
           >
             Algorithm Comparison

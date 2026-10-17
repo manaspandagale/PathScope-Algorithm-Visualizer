@@ -1,9 +1,14 @@
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/manrope";
 @import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/manrope";
 @import "@fontsource-variable/jetbrains-mono";
+
+@theme {
+  --font-sans: 'Instrument Sans Variable', 'Instrument Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-heading: 'Manrope Variable', 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
 
 @layer base {
   :root {
@@ -80,18 +85,45 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-sans);
     background-color: var(--background);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.55;
+    letter-spacing: -0.012em;
     transition: background-color 0.18s ease, color 0.18s ease;
   }
 
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.024em;
+  }
+
+  h1 {
+    font-weight: 750;
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
   code, pre, kbd, samp, .font-mono {
-    font-family: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-family: var(--font-mono) !important;
+    letter-spacing: -0.015em;
+  }
+
+  button, input, select, textarea {
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
   }
 }
 

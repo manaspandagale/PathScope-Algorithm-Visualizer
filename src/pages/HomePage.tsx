@@ -32,7 +32,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </div>
 
         <h1
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight"
+          className="text-4xl sm:text-5xl lg:text-6xl font-heading font-[750] tracking-[-0.03em] leading-[1.12]"
           style={{ color: 'var(--text-primary)' }}
         >
           Understand shortest paths,
@@ -41,7 +41,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
         </h1>
 
         <p
-          className="mt-5 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
+          className="mt-5 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed tracking-[-0.01em]"
           style={{ color: 'var(--text-secondary)' }}
         >
           Build a graph, run BFS or Dijkstra, and replay every step of the algorithm.
@@ -94,32 +94,32 @@ export const HomePage: React.FC<HomePageProps> = () => {
             {/* Edge Weight Badges */}
             <g transform="translate(136, 68)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--surface-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="600" fill="var(--text-secondary)">8</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600" fill="var(--text-secondary)">8</text>
             </g>
 
             <g transform="translate(136, 148)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--primary-subtle)" stroke="var(--state-path, #15803D)" strokeWidth="1.5" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="700" fill="var(--state-path, #15803D)">2</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700" fill="var(--state-path, #15803D)">2</text>
             </g>
 
             <g transform="translate(290, 40)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--surface-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="600" fill="var(--text-secondary)">5</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600" fill="var(--text-secondary)">5</text>
             </g>
 
             <g transform="translate(290, 170)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--primary-subtle)" stroke="var(--state-path, #15803D)" strokeWidth="1.5" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="700" fill="var(--state-path, #15803D)">3</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700" fill="var(--state-path, #15803D)">3</text>
             </g>
 
             <g transform="translate(410, 68)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--surface-elevated)" stroke="var(--border-strong)" strokeWidth="1" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="600" fill="var(--text-secondary)">6</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="600" fill="var(--text-secondary)">6</text>
             </g>
 
             <g transform="translate(410, 148)">
               <rect x="-14" y="-10" width="28" height="20" rx="4" fill="var(--primary-subtle)" stroke="var(--state-path, #15803D)" strokeWidth="1.5" />
-              <text textAnchor="middle" y="4" fontSize="12" fontFamily="JetBrains Mono Variable, monospace" fontWeight="700" fill="var(--state-path, #15803D)">1</text>
+              <text textAnchor="middle" y="4" fontSize="12" fontFamily="var(--font-mono)" fontWeight="700" fill="var(--state-path, #15803D)">1</text>
             </g>
 
             {/* Node A (Start) */}
@@ -174,7 +174,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2
-              className="text-2xl font-bold tracking-tight"
+              className="text-xl sm:text-2xl font-heading font-[700] tracking-[-0.02em] leading-snug"
               style={{ color: 'var(--text-primary)' }}
             >
               Breadth-First Search vs Dijkstra’s Algorithm
@@ -194,7 +194,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
               }}
             >
               <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-base font-heading font-[700] tracking-[-0.015em]" style={{ color: 'var(--text-primary)' }}>
                   Breadth-First Search
                 </h3>
                 <span
@@ -234,7 +234,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
               }}
             >
               <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-base font-heading font-[700] tracking-[-0.015em]" style={{ color: 'var(--text-primary)' }}>
                   Dijkstra’s Algorithm
                 </h3>
                 <span

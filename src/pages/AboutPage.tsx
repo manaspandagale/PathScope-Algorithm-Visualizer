@@ -32,13 +32,13 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
             </span>
           </div>
           <h1
-            className="text-3xl sm:text-4xl font-bold tracking-tight"
+            className="text-2xl sm:text-3xl font-heading font-[750] tracking-[-0.025em] leading-tight"
             style={{ color: 'var(--text-primary)' }}
           >
             About PathScope
           </h1>
           <p
-            className="mt-2 text-base leading-relaxed"
+            className="mt-2 text-base leading-relaxed tracking-[-0.01em]"
             style={{ color: 'var(--text-secondary)' }}
           >
             An interactive educational laboratory designed for rigorous study of graph shortest path algorithms through deterministic, step-by-step state inspection. PathScope Phase 1 implements BFS and Dijkstra through a C++17 WebAssembly engine.
@@ -47,7 +47,7 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
 
         {/* 1. Core Purpose */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-lg font-heading font-[700] tracking-[-0.015em] flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <Layers className="w-4 h-4 text-[var(--primary-action)]" />
             <span>What PathScope does</span>
           </h2>
@@ -58,7 +58,7 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
 
         {/* 2. Canonical Algorithms */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-lg font-heading font-[700] tracking-[-0.015em] flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <GitCompare className="w-4 h-4 text-[var(--primary-action)]" />
             <span>Why BFS and Dijkstra were selected</span>
           </h2>
@@ -100,7 +100,7 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
 
         {/* 3. C++17 & WebAssembly Architecture */}
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-lg font-heading font-[700] tracking-[-0.015em] flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <Cpu className="w-4 h-4 text-[var(--primary-action)]" />
             <span>C++ and WebAssembly architecture</span>
           </h2>
@@ -132,7 +132,7 @@ export const AboutPage: React.FC<AboutPageProps> = () => {
 
         {/* 4. Implemented Capabilities */}
         <section className="space-y-3 pt-2">
-          <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-lg font-heading font-[700] tracking-[-0.015em]" style={{ color: 'var(--text-primary)' }}>
             Implemented capabilities
           </h2>
 

@@ -122,7 +122,8 @@ export const PathScopeLogo: React.FC<PathScopeLogoProps> = ({
         <span
           className="text-[20px] font-bold tracking-tight inline-flex items-center"
           style={{
-            fontFamily: "'Manrope Variable', 'Inter Variable', sans-serif",
+            fontFamily: 'var(--font-heading)',
+            fontWeight: 750,
             letterSpacing: '-0.025em',
           }}
         >

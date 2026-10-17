@@ -108,7 +108,8 @@ export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
               `}
               style={{
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontFamily: "'Manrope Variable', 'Inter Variable', sans-serif",
+                fontFamily: "var(--font-sans)",
+                letterSpacing: "-0.012em",
               }}
             >
               {isActive && (
@@ -211,7 +212,8 @@ export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
                     style={{
                       backgroundColor: isActive ? 'var(--primary-subtle)' : 'transparent',
                       color: isActive ? 'var(--primary-action)' : 'var(--text-primary)',
-                      fontFamily: "'Manrope Variable', 'Inter Variable', sans-serif",
+                      fontFamily: "var(--font-sans)",
+                      letterSpacing: "-0.012em",
                     }}
                   >
                     <span className="font-medium">{link.label}</span>
