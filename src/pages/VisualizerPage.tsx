@@ -131,7 +131,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
 
   return (
     <div
-      className="flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden relative select-none"
+      className="h-full min-h-0 flex flex-col overflow-hidden relative select-none"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',

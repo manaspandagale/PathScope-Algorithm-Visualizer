@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Compass } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '../components/UI/Button';
+import { PathScopeLogo } from '../components/Navigation/PathScopeLogo';
 
 interface HomePageProps {
   theme: 'dark' | 'light';
@@ -10,14 +11,14 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = () => {
   return (
     <div
-      className="min-h-[calc(100vh-64px)] overflow-y-auto select-none"
+      className="h-full min-h-0 overflow-y-auto overscroll-y-contain select-none"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
       }}
     >
       {/* Hero Section */}
-      <section className="max-w-4xl mx-auto px-6 pt-16 pb-14 text-center">
+      <section className="max-w-4xl mx-auto px-6 pt-10 pb-12 text-center">
         <div
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono border mb-6"
           style={{
@@ -26,7 +27,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
             color: 'var(--text-muted)',
           }}
         >
-          <Compass className="w-3.5 h-3.5 text-[var(--primary-action)]" />
+          <PathScopeLogo size={14} showText={false} />
           <span>Interactive DAA Laboratory • 50% Milestone</span>
         </div>
 

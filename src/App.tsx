@@ -49,7 +49,7 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <div
-        className="w-screen h-screen flex flex-col overflow-hidden font-sans"
+        className="w-full h-dvh flex flex-col overflow-hidden font-sans"
         style={{
           backgroundColor: 'var(--background)',
           color: 'var(--text-primary)',
@@ -62,26 +62,42 @@ export const App: React.FC = () => {
         />
 
         {/* Primary Page Routes with Suspense Boundary */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 min-h-0 overflow-hidden relative">
           <React.Suspense
             fallback={
               <div
-                className="w-full h-full flex flex-col items-center justify-center gap-3 select-none"
+                className="w-full h-full flex flex-col select-none"
                 style={{
                   backgroundColor: 'var(--background)',
                   color: 'var(--text-secondary)',
                 }}
               >
-                <div
-                  className="w-7 h-7 rounded-full border-2 border-t-transparent animate-spin"
-                  style={{
-                    borderColor: 'var(--border-strong)',
-                    borderTopColor: 'var(--primary-action)',
-                  }}
-                />
-                <span className="text-xs font-mono tracking-wider uppercase opacity-70">
-                  Loading module...
-                </span>
+                {/* Subtle top progress bar */}
+                <div className="w-full h-[2px] bg-black/5 dark:bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full bg-[var(--primary-action)] animate-pulse"
+                    style={{ width: '60%' }}
+                  />
+                </div>
+                {/* Layout skeleton */}
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-xs font-mono"
+                    style={{
+                      backgroundColor: 'var(--surface)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <div
+                      className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
+                      style={{
+                        borderColor: 'var(--border-strong)',
+                        borderTopColor: 'var(--primary-action)',
+                      }}
+                    />
+                    <span>Loading module...</span>
+                  </div>
+                </div>
               </div>
             }
           >

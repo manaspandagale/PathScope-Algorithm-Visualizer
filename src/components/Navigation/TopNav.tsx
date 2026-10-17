@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sun, Moon, Menu, X, Compass } from 'lucide-react';
-import { IconButton } from '../UI/IconButton';
+import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
+import { PathScopeLogo } from './PathScopeLogo';
 
 interface TopNavProps {
   theme: 'dark' | 'light';
@@ -11,6 +11,7 @@ interface TopNavProps {
 export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
@@ -20,64 +21,79 @@ export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
     { label: 'About', path: '/about' },
   ];
 
-  // Close drawer on ESC
+  const isVisualizerPage = location.pathname === '/visualizer';
+
+  // Handle ESC key to close mobile drawer and return focus
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && mobileMenuOpen) {
         setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileMenuOpen]);
 
+  // Sync mobile drawer state with route change
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
+    setMobileMenuOpen(false);
+  }
+
+  // Click outside to close mobile drawer
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(e.target as HTMLElement) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(e.target as HTMLElement)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [mobileMenuOpen]);
+
   return (
     <header
-      className="h-16 border-b px-6 flex items-center justify-between z-40 select-none transition-colors shrink-0"
-      style={{
-        backgroundColor: 'var(--surface)',
-        borderColor: 'var(--border)',
-        color: 'var(--text-primary)',
-      }}
+      className="glass-header sticky top-0 w-full h-[60px] md:h-[68px] px-4 sm:px-6 flex items-center justify-between z-40 select-none shrink-0"
     >
-      {/* Brand Logo & Wordmark */}
-      <div className="flex items-center gap-4">
+      {/* Brand Identity Lockup */}
+      <div className="flex items-center gap-3 sm:gap-4">
         <Link
           to="/"
-          className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] group"
+          aria-label="PathScope Home"
+          className="flex items-center rounded-lg p-1 -m-1 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] group"
         >
-          <div
-            className="w-8 h-8 rounded-md flex items-center justify-center border transition-transform duration-150 group-hover:scale-105"
-            style={{
-              backgroundColor: 'var(--primary-subtle)',
-              borderColor: 'var(--border-strong)',
-              color: 'var(--primary-action)',
-            }}
-          >
-            <Compass className="w-4 h-4 stroke-[2.2]" />
-          </div>
-          <span
-            className="text-base font-semibold tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            PathScope
-          </span>
+          <PathScopeLogo size={30} />
         </Link>
 
-        <span
-          className="hidden lg:inline-flex items-center gap-1.5 text-xs font-mono px-2 py-0.5 rounded border"
+        {/* Academic Laboratory Badge */}
+        <div
+          className="hidden lg:inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-[11px] font-mono tracking-wider uppercase border"
           style={{
-            backgroundColor: 'var(--background)',
+            backgroundColor: 'var(--glass-nav-bg)',
             borderColor: 'var(--border)',
             color: 'var(--text-muted)',
           }}
         >
-          DAA Laboratory <span className="opacity-40">|</span> 50% Milestone
-        </span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-action)] animate-pulse" />
+          <span>DAA LAB</span>
+          <span className="opacity-40">•</span>
+          <span>50% MILESTONE</span>
+        </div>
       </div>
 
-      {/* Desktop Navigation */}
-      <nav className="hidden md:flex items-center gap-1 h-full" aria-label="Main Navigation">
+      {/* Desktop Coordinated Liquid-Glass Navigation Island */}
+      <nav
+        className="hidden md:flex items-center p-1 rounded-xl glass-nav-tray"
+        aria-label="Primary Navigation"
+      >
         {navLinks.map((link) => {
           const isActive = location.pathname === link.path;
           return (
@@ -86,90 +102,146 @@ export const TopNav: React.FC<TopNavProps> = ({ theme, toggleTheme }) => {
               to={link.path}
               aria-current={isActive ? 'page' : undefined}
               className={`
-                relative h-16 px-3.5 inline-flex items-center text-xs font-medium tracking-tight transition-colors
+                relative px-3.5 py-1.5 rounded-lg text-[13.5px] font-medium transition-all duration-150 flex items-center gap-1.5
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]
-                ${isActive ? 'font-semibold' : 'hover:text-[var(--text-primary)]'}
+                ${
+                  isActive
+                    ? 'glass-pill-active font-semibold shadow-xs'
+                    : 'hover:text-[var(--text-primary)] hover:bg-black/5 dark:hover:bg-white/5'
+                }
               `}
               style={{
-                color: isActive ? 'var(--primary-action)' : 'var(--text-secondary)',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontFamily: "'Manrope Variable', 'Inter Variable', sans-serif",
               }}
             >
-              {link.label}
               {isActive && (
                 <span
-                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-t"
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
                   style={{ backgroundColor: 'var(--primary-action)' }}
+                  aria-hidden="true"
                 />
               )}
+              <span>{link.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Right Actions: Theme Toggle & Mobile Trigger */}
+      {/* Right Actions: Contextual CTA, Theme Switch, and Mobile Toggle */}
       <div className="flex items-center gap-2">
-        <IconButton
-          icon={theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}
-          label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-          onClick={toggleTheme}
-          variant="surface"
-          size="md"
-        />
-
-        {/* Mobile Hamburger */}
-        <div className="md:hidden">
-          <IconButton
-            icon={mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            label={mobileMenuOpen ? 'Close Menu' : 'Open Menu'}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            variant="surface"
-            size="md"
-          />
-        </div>
-      </div>
-
-      {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div
-          ref={mobileMenuRef}
-          className="fixed inset-x-0 top-16 border-b p-4 md:hidden z-50 shadow-lg"
-          style={{
-            backgroundColor: 'var(--surface-elevated)',
-            borderColor: 'var(--border-strong)',
-          }}
-        >
-          <div className="flex flex-col gap-1.5">
-            {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className="px-4 py-3 rounded-md text-sm font-medium flex items-center justify-between min-h-[44px] transition-colors"
-                  style={{
-                    backgroundColor: isActive ? 'var(--primary-subtle)' : 'transparent',
-                    color: isActive ? 'var(--primary-action)' : 'var(--text-primary)',
-                  }}
-                >
-                  <span>{link.label}</span>
-                  {isActive && <span className="w-2 h-2 rounded-full bg-[var(--primary-action)]" />}
-                </Link>
-              );
-            })}
-          </div>
-          <div
-            className="mt-4 pt-3 border-t text-xs flex items-center justify-between"
+        {/* Optional Contextual Launch Lab CTA (shown only when NOT on /visualizer) */}
+        {!isVisualizerPage && (
+          <Link
+            to="/visualizer"
+            className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-xs font-semibold text-white transition-all duration-150 shadow-xs hover:shadow-sm active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
             style={{
-              borderColor: 'var(--border)',
-              color: 'var(--text-muted)',
+              backgroundColor: 'var(--primary-action)',
             }}
           >
-            <span>C++17 & WebAssembly Engine</span>
-            <span className="font-mono">BFS & Dijkstra</span>
+            <span>Launch Lab</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        )}
+
+        {/* Liquid-Glass Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-pressed={theme === 'dark'}
+          className="w-10 h-10 rounded-lg flex items-center justify-center glass-interactive cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          style={{
+            color: 'var(--text-primary)',
+          }}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-4 h-4 text-amber-400 transition-transform duration-200 rotate-0 hover:rotate-45" />
+          ) : (
+            <Moon className="w-4 h-4 text-stone-700 transition-transform duration-200 -rotate-12 hover:rotate-0" />
+          )}
+        </button>
+
+        {/* Mobile Menu Trigger Button */}
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-nav-menu"
+          aria-label={mobileMenuOpen ? 'Close Menu' : 'Open Menu'}
+          title={mobileMenuOpen ? 'Close Menu' : 'Open Menu'}
+          className="md:hidden w-10 h-10 rounded-lg flex items-center justify-center glass-interactive cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+          style={{
+            color: 'var(--text-primary)',
+          }}
+        >
+          {mobileMenuOpen ? (
+            <X className="w-4 h-4 transition-transform duration-150 rotate-90 animate-in" />
+          ) : (
+            <Menu className="w-4 h-4 transition-transform duration-150" />
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Navigation Drawer Overlay */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 top-[60px] bg-black/20 backdrop-blur-xs z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Menu */}
+          <div
+            id="mobile-nav-menu"
+            ref={mobileMenuRef}
+            className="fixed inset-x-0 top-[60px] glass-header border-b p-4 md:hidden z-50 shadow-xl transition-all animate-in fade-in slide-in-from-top-2 duration-150"
+          >
+            <div className="flex flex-col gap-1.5" role="menu">
+              {navLinks.map((link) => {
+                const isActive = location.pathname === link.path;
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    role="menuitem"
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between min-h-[44px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                    style={{
+                      backgroundColor: isActive ? 'var(--primary-subtle)' : 'transparent',
+                      color: isActive ? 'var(--primary-action)' : 'var(--text-primary)',
+                      fontFamily: "'Manrope Variable', 'Inter Variable', sans-serif",
+                    }}
+                  >
+                    <span className="font-medium">{link.label}</span>
+                    {isActive && (
+                      <span className="w-2 h-2 rounded-full bg-[var(--primary-action)]" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Mobile Footer Meta */}
+            <div
+              className="mt-4 pt-3 border-t text-xs flex items-center justify-between"
+              style={{
+                borderColor: 'var(--border)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <span className="font-mono text-[11px]">C++17 & WebAssembly Engine</span>
+              <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                BFS & Dijkstra
+              </span>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );

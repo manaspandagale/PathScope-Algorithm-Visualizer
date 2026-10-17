@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@xyflow/react/dist/style.css";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/instrument-sans";
 @import "@fontsource-variable/jetbrains-mono";
 
 @layer base {
@@ -31,6 +33,13 @@
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
+
+    /* LIQUID-GLASS TOKENS (LIGHT) */
+    --glass-bg: rgba(255, 252, 247, 0.85);
+    --glass-nav-bg: rgba(238, 233, 223, 0.55);
+    --glass-border: rgba(217, 211, 200, 0.75);
+    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.85);
+    --glass-shadow: 0 4px 16px -2px rgba(29, 33, 28, 0.04);
   }
 
   .dark {
@@ -58,6 +67,13 @@
     --error-subtle: rgba(222, 113, 105, 0.15);
     --canvas-grid: #282E28;
     --focus-ring: #78AA90;
+
+    /* LIQUID-GLASS TOKENS (DARK) */
+    --glass-bg: rgba(22, 26, 22, 0.82);
+    --glass-nav-bg: rgba(28, 33, 28, 0.60);
+    --glass-border: rgba(52, 58, 52, 0.75);
+    --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    --glass-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
   }
 
   body {
@@ -163,3 +179,57 @@
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* Liquid-Glass Optical Material Surfaces */
+.glass-header {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-header {
+    background-color: var(--surface);
+  }
+}
+
+.glass-nav-tray {
+  background-color: var(--glass-nav-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-nav-tray {
+    background-color: var(--background-secondary);
+  }
+}
+
+.glass-pill-active {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.glass-interactive {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--glass-highlight);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-interactive:hover {
+  background-color: var(--surface-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.glass-interactive:active {
+  transform: translateY(1px);
+}
+

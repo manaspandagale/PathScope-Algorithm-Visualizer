@@ -158,7 +158,7 @@ export const ComparisonPage: React.FC<ComparisonPageProps> = () => {
 
   return (
     <div
-      className="min-h-[calc(100vh-64px)] overflow-y-auto px-6 py-10 select-none"
+      className="h-full min-h-0 overflow-y-auto overscroll-y-contain px-6 pt-6 pb-10 select-none"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
