@@ -8,10 +8,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
 const outDir = path.join(rootDir, 'src', 'wasm', 'generated');
-const publicWasmDir = path.join(rootDir, 'public', 'wasm');
-
 fs.mkdirSync(outDir, { recursive: true });
-fs.mkdirSync(publicWasmDir, { recursive: true });
 
 // Check emcc executable
 let emccCmd = 'emcc';
@@ -35,7 +32,7 @@ const compileCmd = `${emccCmd} -std=c++17 -O3 -I "${path.join(rootDir, 'cpp', 'i
   `"${path.join(rootDir, 'cpp', 'src', 'bfs.cpp')}" ` +
   `"${path.join(rootDir, 'cpp', 'src', 'dijkstra.cpp')}" ` +
   `"${path.join(rootDir, 'cpp', 'src', 'bindings.cpp')}" ` +
-  `--bind -s MODULARIZE=1 -s EXPORT_ES6=1 -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT=web,webview,node ` +
+  `--bind -s MODULARIZE=1 -s EXPORT_ES6=1 -s ALLOW_MEMORY_GROWTH=1 -s ENVIRONMENT=web,webview ` +
   `-o "${path.join(outDir, 'algorithm_wasm.js')}"`;
 
 console.log(`Executing: ${compileCmd}`);
@@ -52,9 +49,10 @@ export default loadModule;
 `;
 fs.writeFileSync(path.join(outDir, 'algorithm_wasm.d.ts'), dtsContent);
 
-// Copy artifacts to public/wasm for static browser fetching if needed
-for (const file of fs.readdirSync(outDir)) {
-  fs.copyFileSync(path.join(outDir, file), path.join(publicWasmDir, file));
+// Remove stale public/wasm directory to avoid redundant asset duplication
+const publicWasmDir = path.join(rootDir, 'public', 'wasm');
+if (fs.existsSync(publicWasmDir)) {
+  fs.rmSync(publicWasmDir, { recursive: true, force: true });
 }
 
-console.log('[PathScope] WebAssembly module successfully built and synchronized to public/wasm!');
+console.log('[PathScope] WebAssembly module successfully built in src/wasm/generated!');

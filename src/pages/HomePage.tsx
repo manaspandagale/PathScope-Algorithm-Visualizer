@@ -216,7 +216,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
               <div className="mt-4 pt-3 border-t text-xs space-y-2" style={{ borderColor: 'var(--border)' }}>
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--text-muted)' }}>Data structure:</span>
-                  <span className="font-mono font-medium">std::queue&lt;int&gt;</span>
+                  <span className="font-mono font-medium">std::queue&lt;std::string&gt;</span>
                 </div>
                 <div className="flex justify-between">
                   <span style={{ color: 'var(--text-muted)' }}>Optimization:</span>

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Play,
   Pause,
   SkipBack,
   SkipForward,
   RotateCcw,
+  Keyboard,
+  X,
 } from 'lucide-react';
 import { IconButton } from '../UI/IconButton';
 
@@ -35,6 +37,7 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
   speedMultiplier,
   setSpeedMultiplier,
 }) => {
+  const [showKeyHelp, setShowKeyHelp] = useState(false);
   const isAtStart = currentStepIndex <= 0;
   const isAtEnd = currentStepIndex >= totalSteps - 1;
 
@@ -45,7 +48,7 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
     <footer
       role="region"
       aria-label="Algorithm playback controls"
-      className="h-[72px] border-t px-6 flex items-center justify-between gap-6 select-none z-30 shrink-0"
+      className="relative min-h-[64px] sm:h-[72px] border-t px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-6 select-none z-30 shrink-0"
       style={{
         backgroundColor: 'var(--surface)',
         borderColor: 'var(--border)',
@@ -53,14 +56,15 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
       }}
     >
       {/* 1. Coordinated Transport Controls Group */}
-      <div className="flex items-center gap-1.5 p-1 rounded-[var(--radius-md)] border"
+      <div
+        className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-[var(--radius-md)] border shrink-0"
         style={{
           backgroundColor: 'var(--background-secondary)',
           borderColor: 'var(--border)',
         }}
       >
         <IconButton
-          icon={<RotateCcw className="w-4 h-4" />}
+          icon={<RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           label="Restart from beginning"
           onClick={onRestart}
           disabled={totalSteps === 0 || isAtStart}
@@ -69,7 +73,7 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
         />
 
         <IconButton
-          icon={<SkipBack className="w-4 h-4" />}
+          icon={<SkipBack className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           label="Previous step"
           onClick={onPrev}
           disabled={totalSteps === 0 || isAtStart}
@@ -85,9 +89,9 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
           aria-label={isPlaying ? 'Pause' : 'Play'}
           disabled={totalSteps <= 1}
           className={`
-            px-4 h-9 rounded-[var(--radius-sm)] flex items-center gap-2 text-xs font-semibold tracking-tight transition-all duration-150 cursor-pointer
+            px-3 sm:px-4 h-8 sm:h-9 rounded-[var(--radius-sm)] flex items-center gap-1.5 sm:gap-2 text-xs font-semibold tracking-tight transition-all duration-150 cursor-pointer
             active:translate-y-[0.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-1
-            disabled:opacity-35 disabled:cursor-not-allowed shadow-xs
+            disabled:opacity-35 disabled:cursor-not-allowed shadow-xs shrink-0
           `}
           style={{
             backgroundColor: 'var(--primary-action)',
@@ -97,18 +101,18 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
           {isPlaying ? (
             <>
               <Pause className="w-3.5 h-3.5 fill-current" />
-              <span>Pause</span>
+              <span className="hidden xs:inline">Pause</span>
             </>
           ) : (
             <>
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Play</span>
+              <span className="hidden xs:inline">Play</span>
             </>
           )}
         </button>
 
         <IconButton
-          icon={<SkipForward className="w-4 h-4" />}
+          icon={<SkipForward className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           label="Next step"
           onClick={onNext}
           disabled={totalSteps === 0 || isAtEnd}
@@ -117,15 +121,16 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
         />
       </div>
 
-      {/* 2. Interactive Timeline Scrubber with Visible Progress Fill */}
-      <div className="flex-1 max-w-xl flex items-center gap-3">
-        <span className="text-xs font-mono font-medium shrink-0 min-w-[50px] text-right"
+      {/* 2. Interactive Timeline Scrubber */}
+      <div className="flex-1 min-w-0 max-w-xl flex items-center gap-1.5 sm:gap-3">
+        <span
+          className="text-xs font-mono font-medium shrink-0 min-w-[32px] sm:min-w-[44px] text-right"
           style={{ color: 'var(--text-muted)' }}
         >
           {totalSteps > 0 ? `${currentStepIndex + 1}` : '0'}
         </span>
 
-        <div className="relative w-full flex items-center">
+        <div className="relative w-full flex items-center min-w-[60px]">
           {/* Custom Track Background */}
           <div
             className="w-full h-2 rounded-full overflow-hidden pointer-events-none"
@@ -153,22 +158,25 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
           />
         </div>
 
-        <span className="text-xs font-mono font-medium shrink-0 min-w-[50px]"
+        <span
+          className="text-xs font-mono font-medium shrink-0 min-w-[32px] sm:min-w-[44px]"
           style={{ color: 'var(--text-muted)' }}
         >
           / {totalSteps}
         </span>
       </div>
 
-      {/* 3. Speed & Status Section */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded-[var(--radius-md)] border text-xs"
+      {/* 3. Speed & Keyboard Shortcuts Help Group */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Speed Selector */}
+        <div
+          className="flex items-center gap-1 sm:gap-2 px-2 py-1 rounded-[var(--radius-md)] border text-xs"
           style={{
             backgroundColor: 'var(--background-secondary)',
             borderColor: 'var(--border)',
           }}
         >
-          <label htmlFor="playback-speed" className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+          <label htmlFor="playback-speed" className="text-xs font-medium hidden md:inline" style={{ color: 'var(--text-muted)' }}>
             Speed:
           </label>
           <select
@@ -176,7 +184,7 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
             aria-label="Playback speed"
             value={speedMultiplier}
             onChange={(e) => setSpeedMultiplier(Number(e.target.value))}
-            className="px-2 py-1 rounded border text-xs font-mono font-medium cursor-pointer focus-visible:outline-none min-h-[32px]"
+            className="px-1.5 py-0.5 sm:px-2 sm:py-1 rounded border text-xs font-mono font-medium cursor-pointer focus-visible:outline-none min-h-[28px] sm:min-h-[32px]"
             style={{
               backgroundColor: 'var(--surface)',
               borderColor: 'var(--border)',
@@ -189,6 +197,64 @@ export const PlaybackBar: React.FC<PlaybackBarProps> = ({
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Keyboard Help Popover Toggle */}
+        <div className="relative">
+          <IconButton
+            icon={<Keyboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+            label="Keyboard shortcuts guide"
+            onClick={() => setShowKeyHelp((prev) => !prev)}
+            variant="ghost"
+            size="sm"
+          />
+
+          {showKeyHelp && (
+            <div
+              role="tooltip"
+              className="absolute bottom-12 right-0 w-64 p-3 rounded-xl border shadow-xl text-xs space-y-2 z-50 animate-in fade-in duration-150"
+              style={{
+                backgroundColor: 'var(--surface-elevated)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <div className="flex items-center justify-between pb-1.5 border-b" style={{ borderColor: 'var(--border)' }}>
+                <span className="font-semibold text-xs tracking-tight">Keyboard shortcuts</span>
+                <button
+                  type="button"
+                  onClick={() => setShowKeyHelp(false)}
+                  aria-label="Close shortcuts guide"
+                  className="p-0.5 rounded hover:bg-black/5 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+              </div>
+
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Play / Pause</span>
+                  <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded border bg-[var(--background)]">Space</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Previous step</span>
+                  <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded border bg-[var(--background)]">←</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Next step</span>
+                  <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded border bg-[var(--background)]">→</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">First step</span>
+                  <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded border bg-[var(--background)]">Home</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[var(--text-secondary)]">Final step</span>
+                  <kbd className="px-1.5 py-0.5 font-mono text-[10px] rounded border bg-[var(--background)]">End</kbd>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </footer>

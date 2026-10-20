@@ -38,7 +38,7 @@ This repository currently represents the working 50 percent milestone. The final
 | Algorithm runtime | C++17 compiled to WebAssembly |
 | Frontend | React 19 and TypeScript |
 | Graph interface | Interactive undirected weighted graph editor |
-| Automated verification | 11 native C++ tests and 28 Vitest tests (including browser smoke and playback integration tests) |
+| Automated verification | 25 native C++ tests, 31 Vitest tests, and 10 real-browser Playwright E2E tests |
 | Final project scope | Defined in the 100 percent scope section |
 
 The milestone is intentionally limited. Only functionality that is implemented, tested, and exposed in the interface is described as complete.
@@ -584,9 +584,10 @@ Important behavior:
 | Styling | Tailwind CSS 4 and CSS variables | Responsive layouts and semantic theming |
 | Graph canvas | React Flow from `@xyflow/react` | Node and edge editing, viewport controls, and custom graph rendering |
 | Icons | Lucide React | Consistent interface icons |
-| Interface font | Inter Variable | Navigation, headings, body text, and controls |
+| Interface fonts | Instrument Sans Variable and Manrope Variable | Navigation, headings, body text, and controls |
 | Technical font | JetBrains Mono Variable | Pseudocode, weights, distances, and complexity notation |
 | Frontend tests | Vitest | TypeScript, adapter, and integration verification |
+| E2E tests | Playwright | Real-browser accessibility, responsive, and playback verification |
 | Native tests | C++ test executable | Direct algorithm correctness verification without the browser |
 | Static analysis | Oxlint | React and TypeScript linting |
 | Native build configuration | CMake | Portable C++ test and Emscripten target configuration |
@@ -619,15 +620,12 @@ PathScope-Algorithm-Visualizer
 |   |   `-- algorithm_tests.cpp
 |   `-- CMakeLists.txt
 |
+|-- e2e
+|   `-- visualizer.spec.ts
+|
 |-- scripts
 |   |-- build-wasm.js
 |   `-- test-cpp.js
-|
-|-- public
-|   `-- wasm
-|       |-- algorithm_wasm.js
-|       |-- algorithm_wasm.wasm
-|       `-- algorithm_wasm.d.ts
 |
 |-- src
 |   |-- components
@@ -755,7 +753,6 @@ This command:
 2. Compiles the C++17 algorithm sources with optimization enabled.
 3. Produces an ES module loader and WebAssembly binary.
 4. Writes generated assets under `src/wasm/generated`.
-5. Synchronizes the browser assets to `public/wasm`.
 
 ### Start the development server
 
@@ -771,10 +768,16 @@ Open `http://localhost:5173`.
 npm run test:cpp
 ```
 
-### Run the complete automated test suite
+### Run Vitest unit & integration tests
 
 ```bash
 npm test
+```
+
+### Run Playwright real-browser E2E suite
+
+```bash
+npm run test:e2e
 ```
 
 ### Run lint
@@ -799,34 +802,49 @@ npm run preview
 
 ## Testing strategy
 
-### Native C++ tests
+PathScope employs a rigorous three-tier testing strategy ensuring algorithm correctness, WebAssembly bridge stability, and accessible browser interaction.
 
-The native suite verifies the algorithm engine independently of React and WebAssembly.
+### Tier 1: Native C++ algorithm tests (25 tests)
 
-Current coverage includes:
+The native test runner (`cpp/tests/algorithm_tests.cpp`, executed via `npm run test:cpp`) compiles and runs C++17 algorithm unit tests directly against the engine without browser overhead:
 
-- BFS minimum-hop behavior.
-- BFS disconnected graph handling.
-- BFS source-equals-destination behavior.
-- BFS cycle handling.
-- BFS deterministic execution.
-- Dijkstra minimum-weight behavior.
-- Dijkstra selection of a cheaper multi-hop path.
-- Dijkstra disconnected graph handling.
-- Dijkstra source-equals-destination behavior.
-- Dijkstra stale priority-queue entry handling.
-- Dijkstra negative-weight rejection.
+- **BFS FIFO Execution**: Verifies true FIFO queue mechanics via `std::queue<std::string>`.
+- **BFS Deterministic Neighbor Order**: Verifies invariant ordering across arbitrary edge specifications.
+- **BFS Minimum-Hop Traversal**: Verifies optimal hop selection on weighted tradeoff topologies.
+- **BFS Disconnected Graphs**: Verifies unreachable target detection.
+- **BFS Identity & Self-Loops**: Verifies source equals destination and rejects self-loops.
+- **BFS Graph Validation**: Verifies rejection of empty graphs, missing endpoints, invalid edge endpoints, and parallel duplicate edges.
+- **Dijkstra Min-Heap Extraction**: Verifies `std::priority_queue` with `std::greater<HeapEntry>` and deterministic tie-breaking.
+- **Dijkstra Non-Trivial Edge Weights**: Verifies zero-weight edges, fractional/decimal costs, and very large valid distances.
+- **Dijkstra Stale Entry Elimination**: Verifies lazy stale heap entry detection and skips already-settled vertices.
+- **Dijkstra Multi-Hop Tradeoffs**: Verifies selection of multi-hop cheaper paths over expensive single hops.
+- **Dijkstra Negative-Weight Rejection**: Verifies immediate validation rejection for negative edge costs.
+- **Dijkstra Predecessor Edge Reconstruction**: Verifies exact edge ID tracking in optimal path reconstruction.
+- **Dijkstra Graph Validation**: Verifies rejection of self-loops and duplicate parallel connections.
 
-### Frontend and integration tests
+### Tier 2: Vitest WASM & component tests (31 tests)
 
-The Vitest suite verifies:
+The Vitest suite (`npm test`) verifies the TypeScript/WebAssembly integration:
 
-- TypeScript-facing BFS results.
-- TypeScript-facing Dijkstra results.
-- Priority-queue behavior.
-- WebAssembly payload and result integration.
-- Focused browser smoke tests covering Home navigation, BFS/Dijkstra execution, playback controls (play, pause, next, previous, seek, reset), preset loading, endpoint selection, comparison benchmarks, About documentation, and light/dark theme switching.
-- Dedicated 10-step real playback lifecycle integration test proving auto-play advancement, pausing, speed multiplier adjustments, and final state inspection without stalling.
+- **WASM Bridge & Contracts**: Verifies that infinity distances are serialized as `null` and displayed as `∞`.
+- **Structured Snapshots**: Verifies every snapshot includes canonical operation tags, pseudocode line mappings, and synchronized queue/heap before and after states.
+- **Playback Lifecycle**: Dedicated 10-step real playback lifecycle integration test proving auto-play advancement, pausing, speed multiplier adjustments, and final state inspection without stalling.
+- **Component Smoke Tests**: Verifies Home, Visualizer, Comparison, and About pages, navigation, and theme switches.
+
+### Tier 3: Real-browser Playwright E2E suite (10 tests)
+
+The Playwright browser suite (`npm run test:e2e`) exercises the full application in a headless Chromium instance:
+
+1. **BFS Execution**: Loads BFS, steps forward, and verifies minimum hop path discovery.
+2. **Dijkstra Execution**: Loads benchmark tradeoff graph and verifies the optimal cost-7 path.
+3. **Unreachable Topology**: Loads disconnected graph preset and verifies the unreachable destination notice.
+4. **Dynamic Edge Editing**: Edits edge weights in real-time, verifying immediate snapshot regeneration.
+5. **Accessible Edge Dialog**: Verifies keyboard focus trap, native dialog mechanics, and Escape key return.
+6. **ARIA Inspector Tabs**: Verifies Arrow Left/Right and Home/End keyboard tab navigation.
+7. **Mobile Drawer Mechanics**: Verifies 390px mobile drawer slide-out, focus containment, and Escape dismissal.
+8. **Responsive Viewport Audit**: Confirms zero horizontal overflow across 390×844, 768×1024, 1024×768, 1280×720, and 1440×900.
+9. **Inspector Tab Reachability**: Verifies all 4 inspector tabs remain fully visible without horizontal clipping at 1280px.
+10. **Theme Switcher**: Verifies light/dark mode switching and DOM attribute consistency.
 
 ### Continuous integration
 

@@ -1,12 +1,29 @@
 export type AlgorithmType = 'bfs' | 'dijkstra';
 
+export type SnapshotOperation =
+  | 'initialize'
+  | 'enqueue'
+  | 'dequeue'
+  | 'extract-min'
+  | 'inspect-edge'
+  | 'relax-edge'
+  | 'skip-edge'
+  | 'settle-vertex'
+  | 'skip-stale-entry'
+  | 'reconstruct-path'
+  | 'complete'
+  | 'unreachable'
+  | 'invalid';
+
 export interface GraphNodeData {
   label: string;
   isSource: boolean;
   isTarget: boolean;
   state?: 'default' | 'current' | 'visited' | 'frontier' | 'path';
-  distance?: number | null; // For Dijkstra: tentative distance
+  distance?: number | null; // For Dijkstra / BFS: tentative distance or hop count (null = ∞)
   predecessor?: string | null;
+  bfsLevel?: number | null;
+  isSettled?: boolean;
   [key: string]: unknown;
 }
 
@@ -22,13 +39,17 @@ export type DataStructureType = 'queue' | 'priorityQueue';
 export interface QueueItem {
   id: string;
   label: string;
+  priority?: number | null;
+  extra?: string;
+  isStale?: boolean;
 }
 
 export interface PriorityQueueItem {
   id: string;
   label: string;
-  priority: number;
+  priority: number | null;
   extra?: string;
+  isStale?: boolean;
 }
 
 export type DataStructureItem = QueueItem | PriorityQueueItem;
@@ -36,21 +57,34 @@ export type DataStructureItem = QueueItem | PriorityQueueItem;
 export interface StepSnapshot {
   stepNumber: number;
   codeLine: number;
+  operation: SnapshotOperation;
   explanation: string;
   currentNode: string | null;
+  activeVertex: string | null;
+  inspectedEdgeId: string | null;
   currentEdge: { source: string; target: string } | null;
   visitedNodes: string[];
+  settledNodes?: string[];
   visitedEdges: string[]; // Edge IDs
   frontierNodes: string[]; // Nodes currently in queue / priority queue
   pathNodes: string[]; // Reconstructed path when found
   pathEdges: string[]; // Reconstructed path edge IDs
-  distances: Record<string, number>; // Tentative distances
-  predecessors: Record<string, string | null>; // Predecessor mapping
+  distances: Record<string, number | null>; // Distances (null represents infinity ∞)
+  predecessors: Record<string, string | null>; // Predecessor node mapping
+  predecessorEdgeIds?: Record<string, string | null>; // Predecessor edge ID mapping
   traversalOrder: string[]; // Order nodes were processed
+  previousDistance?: number | null;
+  candidateDistance?: number | null;
+  updatedDistance?: number | null;
+  edgeWeight?: number | null;
+  distanceUpdated?: boolean;
   dataStructure: {
     type: DataStructureType;
     items: DataStructureItem[];
   };
+  queueOrHeapBefore?: DataStructureItem[];
+  queueOrHeapAfter?: DataStructureItem[];
+  bfsLevel?: number | null;
   status: 'ready' | 'running' | 'found' | 'unreachable' | 'invalid';
   totalCost?: number;
   hopCount?: number;

@@ -97,6 +97,12 @@ export const CustomEdge = memo(({
           <button
             type="button"
             onClick={handleWeightClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleWeightClick(e as unknown as React.MouseEvent);
+              }
+            }}
             title="Click to edit edge weight"
             aria-label={`Edge weight ${weight}. Click to edit.`}
             className={`

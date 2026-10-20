@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iomanip>
 #include <cctype>
+#include <cmath>
+#include <limits>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/bind.h>
@@ -35,18 +37,16 @@ static std::string escapeJson(const std::string& s) {
     return o.str();
 }
 
-// Minimal, robust JSON parser for the specific Graph payload
 struct GraphPayload {
     Graph graph;
     std::string sourceId;
     std::string targetId;
 };
 
-// Helper tokenizer / parser
+// Robust JSON parser for graph payloads
 static GraphPayload parseGraphJson(const std::string& json) {
     GraphPayload payload;
 
-    // Helper to find a string value after a key
     auto findStringField = [&](const std::string& key, size_t startPos = 0) -> std::pair<std::string, size_t> {
         std::string pattern = "\"" + key + "\"";
         size_t p = json.find(pattern, startPos);
@@ -60,7 +60,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
         return {json.substr(quote1 + 1, quote2 - quote1 - 1), quote2 + 1};
     };
 
-    // Helper to find a boolean field
     auto findBoolField = [&](const std::string& key) -> bool {
         std::string pattern = "\"" + key + "\"";
         size_t p = json.find(pattern);
@@ -91,7 +90,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
                 if (objEnd == std::string::npos) break;
                 std::string nodeObj = nodesArr.substr(objPos, objEnd - objPos + 1);
 
-                // extract id and label
                 std::string id, label;
                 size_t pId = nodeObj.find("\"id\"");
                 if (pId != std::string::npos) {
@@ -135,7 +133,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
                 std::string id, source, target;
                 double weight = 1.0;
 
-                // id
                 size_t pId = edgeObj.find("\"id\"");
                 if (pId != std::string::npos) {
                     size_t q1 = edgeObj.find('"', edgeObj.find(':', pId) + 1);
@@ -144,7 +141,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
                         id = edgeObj.substr(q1 + 1, q2 - q1 - 1);
                     }
                 }
-                // source
                 size_t pSrc = edgeObj.find("\"source\"");
                 if (pSrc != std::string::npos) {
                     size_t q1 = edgeObj.find('"', edgeObj.find(':', pSrc) + 1);
@@ -153,7 +149,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
                         source = edgeObj.substr(q1 + 1, q2 - q1 - 1);
                     }
                 }
-                // target
                 size_t pTgt = edgeObj.find("\"target\"");
                 if (pTgt != std::string::npos) {
                     size_t q1 = edgeObj.find('"', edgeObj.find(':', pTgt) + 1);
@@ -162,7 +157,6 @@ static GraphPayload parseGraphJson(const std::string& json) {
                         target = edgeObj.substr(q1 + 1, q2 - q1 - 1);
                     }
                 }
-                // weight
                 size_t pW = edgeObj.find("\"weight\"");
                 if (pW != std::string::npos) {
                     size_t colon = edgeObj.find(':', pW);
@@ -191,6 +185,26 @@ static GraphPayload parseGraphJson(const std::string& json) {
     return payload;
 }
 
+static void serializeItemsArray(std::ostringstream& ss, const std::vector<DataStructureItem>& items) {
+    ss << "[";
+    for (size_t j = 0; j < items.size(); ++j) {
+        if (j > 0) ss << ",";
+        const auto& item = items[j];
+        ss << "{";
+        ss << "\"id\":\"" << escapeJson(item.id) << "\",";
+        ss << "\"label\":\"" << escapeJson(item.label) << "\",";
+        if (std::isinf(item.priority) || item.priority >= 1e18) {
+            ss << "\"priority\":null,";
+        } else {
+            ss << "\"priority\":" << item.priority << ",";
+        }
+        ss << "\"extra\":\"" << escapeJson(item.extra) << "\",";
+        ss << "\"isStale\":" << (item.isStale ? "true" : "false");
+        ss << "}";
+    }
+    ss << "]";
+}
+
 // Serialize std::vector<StepSnapshot> to JSON string
 static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& snapshots) {
     std::ostringstream ss;
@@ -203,12 +217,25 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
         ss << "{";
         ss << "\"stepNumber\":" << s.stepNumber << ",";
         ss << "\"codeLine\":" << s.codeLine << ",";
+        ss << "\"operation\":\"" << escapeJson(s.operation.empty() ? "running" : s.operation) << "\",";
         ss << "\"explanation\":\"" << escapeJson(s.explanation) << "\",";
 
         if (s.currentNode.empty()) {
             ss << "\"currentNode\":null,";
         } else {
             ss << "\"currentNode\":\"" << escapeJson(s.currentNode) << "\",";
+        }
+
+        if (s.activeVertex.empty()) {
+            ss << "\"activeVertex\":null,";
+        } else {
+            ss << "\"activeVertex\":\"" << escapeJson(s.activeVertex) << "\",";
+        }
+
+        if (s.inspectedEdgeId.empty()) {
+            ss << "\"inspectedEdgeId\":null,";
+        } else {
+            ss << "\"inspectedEdgeId\":\"" << escapeJson(s.inspectedEdgeId) << "\",";
         }
 
         if (s.hasCurrentEdge) {
@@ -223,6 +250,14 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
         for (size_t j = 0; j < s.visitedNodes.size(); ++j) {
             if (j > 0) ss << ",";
             ss << "\"" << escapeJson(s.visitedNodes[j]) << "\"";
+        }
+        ss << "],";
+
+        // settledNodes
+        ss << "\"settledNodes\":[";
+        for (size_t j = 0; j < s.settledNodes.size(); ++j) {
+            if (j > 0) ss << ",";
+            ss << "\"" << escapeJson(s.settledNodes[j]) << "\"";
         }
         ss << "],";
 
@@ -258,13 +293,18 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
         }
         ss << "],";
 
-        // distances
+        // distances (serialize infinity as null)
         ss << "\"distances\":{";
         bool firstD = true;
         for (const auto& [nodeId, dist] : s.distances) {
             if (!firstD) ss << ",";
             firstD = false;
-            ss << "\"" << escapeJson(nodeId) << "\":" << dist;
+            ss << "\"" << escapeJson(nodeId) << "\":";
+            if (std::isinf(dist) || dist >= 1e18) {
+                ss << "null";
+            } else {
+                ss << dist;
+            }
         }
         ss << "},";
 
@@ -283,6 +323,21 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
         }
         ss << "},";
 
+        // predecessorEdgeIds
+        ss << "\"predecessorEdgeIds\":{";
+        bool firstPE = true;
+        for (const auto& [nodeId, edgeId] : s.predecessorEdgeIds) {
+            if (!firstPE) ss << ",";
+            firstPE = false;
+            ss << "\"" << escapeJson(nodeId) << "\":";
+            if (edgeId.empty()) {
+                ss << "null";
+            } else {
+                ss << "\"" << escapeJson(edgeId) << "\"";
+            }
+        }
+        ss << "},";
+
         // traversalOrder
         ss << "\"traversalOrder\":[";
         for (size_t j = 0; j < s.traversalOrder.size(); ++j) {
@@ -291,23 +346,59 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
         }
         ss << "],";
 
+        // previousDistance
+        if (!s.previousDistance.has_value() || std::isinf(*s.previousDistance) || *s.previousDistance >= 1e18) {
+            ss << "\"previousDistance\":null,";
+        } else {
+            ss << "\"previousDistance\":" << *s.previousDistance << ",";
+        }
+
+        // candidateDistance
+        if (!s.candidateDistance.has_value() || std::isinf(*s.candidateDistance) || *s.candidateDistance >= 1e18) {
+            ss << "\"candidateDistance\":null,";
+        } else {
+            ss << "\"candidateDistance\":" << *s.candidateDistance << ",";
+        }
+
+        // updatedDistance
+        if (!s.updatedDistance.has_value() || std::isinf(*s.updatedDistance) || *s.updatedDistance >= 1e18) {
+            ss << "\"updatedDistance\":null,";
+        } else {
+            ss << "\"updatedDistance\":" << *s.updatedDistance << ",";
+        }
+
+        // edgeWeight
+        if (!s.edgeWeight.has_value() || std::isinf(*s.edgeWeight) || *s.edgeWeight >= 1e18) {
+            ss << "\"edgeWeight\":null,";
+        } else {
+            ss << "\"edgeWeight\":" << *s.edgeWeight << ",";
+        }
+
+        ss << "\"distanceUpdated\":" << (s.distanceUpdated ? "true" : "false") << ",";
+
         // dataStructure
         ss << "\"dataStructure\":{";
         ss << "\"type\":\"" << escapeJson(s.dataStructureType) << "\",";
-        ss << "\"items\":[";
-        for (size_t j = 0; j < s.dataStructureItems.size(); ++j) {
-            if (j > 0) ss << ",";
-            const auto& item = s.dataStructureItems[j];
-            ss << "{";
-            ss << "\"id\":\"" << escapeJson(item.id) << "\",";
-            ss << "\"label\":\"" << escapeJson(item.label) << "\",";
-            ss << "\"priority\":" << item.priority;
-            if (!item.extra.empty()) {
-                ss << ",\"extra\":\"" << escapeJson(item.extra) << "\"";
-            }
-            ss << "}";
+        ss << "\"items\":";
+        serializeItemsArray(ss, s.dataStructureItems);
+        ss << "},";
+
+        // queueOrHeapBefore
+        ss << "\"queueOrHeapBefore\":";
+        serializeItemsArray(ss, s.queueOrHeapBefore);
+        ss << ",";
+
+        // queueOrHeapAfter
+        ss << "\"queueOrHeapAfter\":";
+        serializeItemsArray(ss, s.queueOrHeapAfter);
+        ss << ",";
+
+        // bfsLevel
+        if (!s.bfsLevel.has_value()) {
+            ss << "\"bfsLevel\":null,";
+        } else {
+            ss << "\"bfsLevel\":" << *s.bfsLevel << ",";
         }
-        ss << "]},";
 
         // status, totalCost, hopCount
         ss << "\"status\":\"" << escapeJson(s.status) << "\",";
@@ -320,7 +411,6 @@ static std::string serializeSnapshotsToJson(const std::vector<StepSnapshot>& sna
     return ss.str();
 }
 
-// Exported WebAssembly wrappers
 std::string run_bfs_wasm(const std::string& inputJson) {
     GraphPayload p = parseGraphJson(inputJson);
     auto snapshots = execute_bfs(p.graph, p.sourceId, p.targetId);

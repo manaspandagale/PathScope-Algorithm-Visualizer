@@ -47,8 +47,20 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
     borderWidth = '3px';
   }
 
+  const distText = (distance === null || distance === Infinity || (typeof distance === 'number' && distance >= 1e8))
+    ? '∞'
+    : distance !== undefined
+    ? String(distance)
+    : 'unvisited';
+
+  const nodeLabelText = nodeData.label || id;
+  const accessibleLabel = `Vertex ${nodeLabelText}${isSource ? ', source' : ''}${isTarget ? ', destination' : ''}, tentative distance ${distText}, state ${state}`;
+
   return (
     <div
+      tabIndex={0}
+      role="group"
+      aria-label={accessibleLabel}
       style={{
         backgroundColor,
         borderColor,
@@ -60,7 +72,7 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
           ? '0 0 0 3px var(--focus-ring)'
           : '0 2px 6px rgba(0, 0, 0, 0.05)',
       }}
-      className={`relative w-[54px] h-[54px] transition-all flex flex-col items-center justify-center select-none ${pulseClass}`}
+      className={`relative w-[54px] h-[54px] transition-all flex flex-col items-center justify-center select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] ${pulseClass}`}
     >
       {/* Handles */}
       <Handle
@@ -121,20 +133,20 @@ export const CustomNode = memo(({ id, data, selected }: NodeProps) => {
         className="font-bold text-base tracking-tight font-sans leading-none"
         style={{ color: 'var(--text-primary)' }}
       >
-        {nodeData.label || id}
+        {nodeLabelText}
       </span>
 
       {/* Distance tag badge below node */}
-      {distance !== undefined && distance !== null && (
+      {distance !== undefined && (
         <div
           className="absolute -bottom-4 px-1.5 py-0.5 rounded border text-[11px] font-mono font-semibold whitespace-nowrap shadow-xs"
           style={{
             backgroundColor: 'var(--surface-elevated)',
             borderColor: 'var(--border-strong)',
-            color: distance === Infinity ? 'var(--text-muted)' : 'var(--text-primary)',
+            color: distText === '∞' ? 'var(--text-muted)' : 'var(--text-primary)',
           }}
         >
-          {distance === Infinity ? '∞' : distance}
+          {distText}
         </div>
       )}
 
