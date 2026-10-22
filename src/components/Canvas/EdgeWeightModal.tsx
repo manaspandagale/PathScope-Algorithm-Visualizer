@@ -21,7 +21,10 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
   const [weight, setWeight] = useState<string>(String(initialWeight));
   const [error, setError] = useState<string | null>(null);
   const [prevEdgeKey, setPrevEdgeKey] = useState<string>('');
+
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
 
   const edgeKey = `${edgeId}-${initialWeight}-${isOpen}`;
   if (prevEdgeKey !== edgeKey) {
@@ -30,33 +33,71 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
     setError(null);
   }
 
+  // Manage focus restoration and native dialog show/close
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
     if (isOpen) {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
+      if (!dialog.open) {
+        try {
+          dialog.showModal();
+        } catch {
+          // Fallback if showModal already active
+        }
+      }
       setTimeout(() => inputRef.current?.focus(), 50);
+    } else {
+      if (dialog.open) {
+        dialog.close();
+      }
+      triggerElementRef.current?.focus();
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  // Focus trap inside the dialog
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDialogElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onClose();
+      return;
+    }
 
-  if (!isOpen || !edgeId) return null;
+    if (e.key === 'Tab') {
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = dialog.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!edgeId) return;
+
     const parsed = Number(weight);
     if (isNaN(parsed)) {
       setError('Weight must be a valid number.');
+      inputRef.current?.focus();
       return;
     }
     if (parsed < 0) {
-      setError('Dijkstra requires non-negative edge weights (w ≥ 0).');
+      setError("Dijkstra requires non-negative edge weights (w ≥ 0).");
+      inputRef.current?.focus();
       return;
     }
     onSave(edgeId, parsed);
@@ -64,26 +105,30 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edge-weight-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs select-none"
+    <dialog
+      id="edge-weight-dialog"
+      ref={dialogRef}
+      onKeyDown={handleKeyDown}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      aria-labelledby="edge-weight-dialog-title"
+      aria-describedby={error ? 'edge-weight-error' : 'edge-weight-hint'}
+      className="m-auto rounded-xl border p-0 shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-xs select-none max-w-sm w-[90vw]"
+      style={{
+        backgroundColor: 'var(--surface-elevated)',
+        borderColor: 'var(--border)',
+        color: 'var(--text-primary)',
+      }}
     >
-      <div
-        className="w-full max-w-sm rounded-xl border p-6 shadow-xl"
-        style={{
-          backgroundColor: 'var(--surface-elevated)',
-          borderColor: 'var(--border)',
-          color: 'var(--text-primary)',
-        }}
-      >
+      <div className="p-6">
         <div
           className="flex items-center justify-between pb-3 border-b"
           style={{ borderColor: 'var(--border)' }}
         >
           <h3
-            id="edge-weight-modal-title"
+            id="edge-weight-dialog-title"
             className="text-base font-semibold tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
@@ -105,33 +150,43 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
               className="block text-xs font-medium mb-1.5"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Weight value (w ≥ 0)
+              Weight value (non-negative w ≥ 0)
             </label>
             <input
               id="edge-weight-input"
               ref={inputRef}
               type="number"
               min="0"
-              step="1"
+              step="any"
               value={weight}
-              onChange={(e) => setWeight(e.target.value)}
+              onChange={(e) => {
+                setWeight(e.target.value);
+                if (error) setError(null);
+              }}
+              aria-describedby={error ? 'edge-weight-error' : 'edge-weight-hint'}
               className="w-full px-3 py-2 rounded-md border font-mono text-base font-semibold focus-visible:outline-none min-h-[44px]"
               style={{
                 backgroundColor: 'var(--background)',
-                borderColor: error ? 'var(--error)' : 'var(--border)',
+                borderColor: error ? 'var(--error, #DC2626)' : 'var(--border)',
                 color: 'var(--text-primary)',
               }}
             />
             {error && (
-              <p className="mt-1.5 text-xs" style={{ color: 'var(--error)' }}>
+              <p
+                id="edge-weight-error"
+                role="alert"
+                className="mt-1.5 text-xs font-medium"
+                style={{ color: 'var(--error, #DC2626)' }}
+              >
                 {error}
               </p>
             )}
             <p
+              id="edge-weight-hint"
               className="mt-2 text-xs leading-relaxed"
               style={{ color: 'var(--text-muted)' }}
             >
-              Dijkstra minimizes cumulative edge weights. BFS treats each edge as 1 hop regardless of weight.
+              Dijkstra minimizes cumulative edge weights. BFS treats each edge as 1 hop regardless of numeric weight.
             </p>
           </div>
 
@@ -151,13 +206,13 @@ export const EdgeWeightModal: React.FC<EdgeWeightModalProps> = ({
               type="submit"
               variant="primary"
               size="md"
-              leftIcon={<Check className="w-4 h-4" />}
+              leftIcon={<Check className="w-3.5 h-3.5" />}
             >
               Save weight
             </Button>
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 };

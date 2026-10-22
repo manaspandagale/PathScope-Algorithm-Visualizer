@@ -32,3 +32,7 @@ tmp/
 *.tmp
 *.temp
 
+# Test artifacts
+test-results/
+playwright-report/
+

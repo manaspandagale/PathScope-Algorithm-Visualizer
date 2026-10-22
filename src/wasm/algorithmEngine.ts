@@ -10,6 +10,15 @@ interface PathScopeWasmModule {
 let wasmModulePromise: Promise<PathScopeWasmModule> | null = null;
 let wasmModuleInstance: PathScopeWasmModule | null = null;
 let wasmInitError: string | null = null;
+let preloadedWasmBinary: Uint8Array | ArrayBuffer | null = null;
+
+/**
+ * Injects a preloaded WASM binary (e.g. from Node/Vitest test runner setup).
+ * This eliminates the need for the browser bundle to import Node 'fs' or 'path'.
+ */
+export function setPreloadedWasmBinary(binary: Uint8Array | ArrayBuffer | null): void {
+  preloadedWasmBinary = binary;
+}
 
 /**
  * Initializes and returns the singleton C++ WebAssembly module.
@@ -28,18 +37,8 @@ export async function getWasmModule(): Promise<PathScopeWasmModule> {
       const loadModule = (await import('./generated/algorithm_wasm.js')).default;
       const moduleOptions: Record<string, unknown> = {};
 
-      // If running inside Node or jsdom test runner, provide preloaded binary
-      if (typeof process !== 'undefined' && process.versions?.node) {
-        try {
-          const fs = await import('fs');
-          const path = await import('path');
-          const wasmFile = path.resolve(process.cwd(), 'src', 'wasm', 'generated', 'algorithm_wasm.wasm');
-          if (fs.existsSync(wasmFile)) {
-            moduleOptions.wasmBinary = fs.readFileSync(wasmFile);
-          }
-        } catch {
-          // Fall back to default loader behavior
-        }
+      if (preloadedWasmBinary) {
+        moduleOptions.wasmBinary = preloadedWasmBinary;
       }
 
       const mod = await loadModule(moduleOptions);

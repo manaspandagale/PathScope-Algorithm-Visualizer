@@ -6,13 +6,15 @@ import { PseudocodeViewer } from './PseudocodeViewer';
 import { DataStructureViewer } from './DataStructureViewer';
 import { ResultSummary } from './ResultSummary';
 import { TabList } from '../UI/TabList';
-import { BookOpen, Code, Layers, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Code, Layers, CheckCircle2, Maximize2, Minimize2 } from 'lucide-react';
 
 interface InfoPanelProps {
   algorithm: AlgorithmType;
   snapshot: StepSnapshot | null;
   currentStepIndex: number;
   totalSteps: number;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 type TabType = 'explanation' | 'pseudocode' | 'data' | 'result';
@@ -22,6 +24,8 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   snapshot,
   currentStepIndex,
   totalSteps,
+  isExpanded = false,
+  onToggleExpand,
 }) => {
   const metadata = ALGORITHMS_METADATA[algorithm];
   const [activeTab, setActiveTab] = useState<TabType>('explanation');
@@ -62,16 +66,35 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
             {subtitle}
           </p>
         </div>
-        <span
-          className="text-xs font-mono font-medium px-2 py-0.5 rounded border"
-          style={{
-            backgroundColor: 'var(--background)',
-            borderColor: 'var(--border)',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          {metadata.timeComplexity.worst}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="text-xs font-mono font-medium px-2 py-0.5 rounded border"
+            style={{
+              backgroundColor: 'var(--background)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {metadata.timeComplexity.worst}
+          </span>
+
+          {onToggleExpand && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              title={isExpanded ? 'Collapse inspector width (420px)' : 'Expand inspector width (580px)'}
+              aria-label={isExpanded ? 'Collapse inspector width' : 'Expand inspector width'}
+              className="p-1.5 rounded border flex items-center justify-center transition-colors cursor-pointer hover:bg-[var(--background-secondary)]"
+              style={{
+                backgroundColor: isExpanded ? 'var(--primary-subtle)' : 'var(--background)',
+                borderColor: isExpanded ? 'var(--primary-action)' : 'var(--border)',
+                color: isExpanded ? 'var(--primary-action)' : 'var(--text-secondary)',
+              }}
+            >
+              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Accessible TabList */}

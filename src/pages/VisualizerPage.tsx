@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { Node, Edge } from '@xyflow/react';
-import { AlertCircle, Loader2, SlidersHorizontal, PanelRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { AlgorithmType, GraphNodeData, GraphEdgeData } from '../types/graph';
-import { useAlgorithmPlayback } from '../hooks/useAlgorithmPlayback';
 import { Sidebar } from '../components/Sidebar/Sidebar';
 import { GraphCanvas } from '../components/Canvas/GraphCanvas';
 import { InfoPanel } from '../components/InfoPanel/InfoPanel';
 import { PlaybackBar } from '../components/Playback/PlaybackBar';
 import { EdgeWeightModal } from '../components/Canvas/EdgeWeightModal';
+import { useAlgorithmPlayback } from '../hooks/useAlgorithmPlayback';
+import type { AlgorithmType, GraphNodeData, GraphEdgeData } from '../types/graph';
+import {
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+  PanelRight,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import { IconButton } from '../components/UI/IconButton';
+import { CanvasStepBanner } from '../components/Canvas/CanvasStepBanner';
 
-interface VisualizerPageProps {
+export interface VisualizerPageProps {
   theme: 'dark' | 'light';
   nodes: Node<GraphNodeData>[];
   setNodes: React.Dispatch<React.SetStateAction<Node<GraphNodeData>[]>>;
@@ -44,17 +52,61 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
 }) => {
   const [searchParams] = useSearchParams();
 
-  // Desktop collapsible panels
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
-  const [desktopInspectorOpen, setDesktopInspectorOpen] = useState(true);
+  // Desktop side panels state
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState<boolean>(true);
+  const [desktopInspectorOpen, setDesktopInspectorOpen] = useState<boolean>(true);
+  const [inspectorWidth, setInspectorWidth] = useState<number>(420);
+  const [isInspectorExpanded, setIsInspectorExpanded] = useState<boolean>(false);
+  const [isResizingInspector, setIsResizingInspector] = useState<boolean>(false);
 
-  // Mobile / tablet panel drawers
-  const [mobileConfigOpen, setMobileConfigOpen] = useState(false);
-  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+  const handleToggleExpandInspector = () => {
+    setIsInspectorExpanded((prev) => {
+      const next = !prev;
+      setInspectorWidth(next ? 580 : 420);
+      return next;
+    });
+  };
 
-  // Sync algorithm query parameter (e.g. /visualizer?algo=bfs)
+  const handleMouseDownResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingInspector(true);
+    const startX = e.clientX;
+    const startWidth = isInspectorExpanded ? 580 : inspectorWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX;
+      const newWidth = Math.min(Math.max(startWidth + delta, 360), Math.min(window.innerWidth - 300, 750));
+      setInspectorWidth(newWidth);
+      if (newWidth >= 500) {
+        setIsInspectorExpanded(true);
+      } else {
+        setIsInspectorExpanded(false);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingInspector(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // Mobile off-canvas drawers state
+  const [mobileConfigOpen, setMobileConfigOpen] = useState<boolean>(false);
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState<boolean>(false);
+
+  // Focus restoration refs for mobile drawer buttons
+  const mobileConfigBtnRef = useRef<HTMLButtonElement>(null);
+  const mobileInspectorBtnRef = useRef<HTMLButtonElement>(null);
+  const mobileConfigDrawerRef = useRef<HTMLDivElement>(null);
+  const mobileInspectorDrawerRef = useRef<HTMLDivElement>(null);
+
+  // Read URL params for algorithm initialization
   useEffect(() => {
-    const algoParam = searchParams.get('algo');
+    const algoParam = searchParams.get('algo') as AlgorithmType;
     if (algoParam === 'bfs' || algoParam === 'dijkstra') {
       setAlgorithm(algoParam);
     }
@@ -114,8 +166,8 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
   }, []);
 
   const handleSaveEdgeWeight = (edgeId: string, newWeight: number) => {
-    setEdges((prev) =>
-      prev.map((edge) =>
+    setEdges((prev: Edge<GraphEdgeData>[]) =>
+      prev.map((edge: Edge<GraphEdgeData>) =>
         edge.id === edgeId
           ? {
               ...edge,
@@ -129,22 +181,101 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
     );
   };
 
+  // Playback keyboard shortcuts (Phase 3, item 6)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'SELECT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('dialog') ||
+          target.closest('[role="dialog"]'))
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isPlaying) {
+          pause();
+        } else {
+          play();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevStep();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextStep();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToStep(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToStep(Math.max(0, totalSteps - 1));
+      } else if (e.key === 'Escape') {
+        if (mobileConfigOpen) {
+          setMobileConfigOpen(false);
+          mobileConfigBtnRef.current?.focus();
+        }
+        if (mobileInspectorOpen) {
+          setMobileInspectorOpen(false);
+          mobileInspectorBtnRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, pause, play, prevStep, nextStep, goToStep, totalSteps, mobileConfigOpen, mobileInspectorOpen]);
+
+  // Trap and return focus for mobile drawers
+  useEffect(() => {
+    if (mobileConfigOpen) {
+      mobileConfigDrawerRef.current?.focus();
+    }
+  }, [mobileConfigOpen]);
+
+  useEffect(() => {
+    if (mobileInspectorOpen) {
+      mobileInspectorDrawerRef.current?.focus();
+    }
+  }, [mobileInspectorOpen]);
+
+  // Screen reader live announcement text
+  const liveAnnouncement = currentSnapshot
+    ? `Step ${currentStepIndex + 1} of ${totalSteps}. Operation: ${currentSnapshot.operation}. Active vertex: ${
+        currentSnapshot.activeVertex || currentSnapshot.currentNode || 'none'
+      }. ${currentSnapshot.distanceUpdated ? 'Distance updated.' : ''} ${
+        currentSnapshot.status === 'found' ? 'Optimal path found!' : ''
+      } ${currentSnapshot.status === 'unreachable' ? 'Target unreachable.' : ''}`
+    : '';
+
   return (
     <div
-      className="h-full min-h-0 flex flex-col overflow-hidden relative select-none"
+      className="flex flex-col h-full overflow-hidden"
       style={{
         backgroundColor: 'var(--background)',
         color: 'var(--text-primary)',
       }}
     >
-      {/* Validation Banner (e.g. Negative Weights in Dijkstra) */}
+      {/* Polite Live Region for screen readers (Phase 5, item 4) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {liveAnnouncement}
+      </div>
+
+      {/* Persistent Error Alert for C++ Engine Validations */}
       {errorMessage && (
         <div
           role="alert"
-          className="px-6 py-2 flex items-center justify-between text-xs font-medium border-b z-30"
+          className="px-6 py-2.5 border-b text-xs font-medium flex items-center justify-between shrink-0"
           style={{
-            backgroundColor: 'var(--error)',
-            color: '#FFFFFF',
+            backgroundColor: 'var(--error-subtle, #FEF2F2)',
+            borderColor: 'var(--error, #DC2626)',
+            color: 'var(--error, #DC2626)',
           }}
         >
           <div className="flex items-center gap-2">
@@ -166,11 +297,15 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         }}
       >
         <button
+          ref={mobileConfigBtnRef}
+          type="button"
           onClick={() => {
-            setMobileConfigOpen(!mobileConfigOpen);
+            const next = !mobileConfigOpen;
+            setMobileConfigOpen(next);
             setMobileInspectorOpen(false);
           }}
           aria-expanded={mobileConfigOpen}
+          aria-controls="mobile-config-drawer"
           className="flex items-center gap-1.5 px-3 py-2 rounded-md border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileConfigOpen ? 'var(--background-secondary)' : 'var(--background)',
@@ -183,11 +318,15 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
         </button>
 
         <button
+          ref={mobileInspectorBtnRef}
+          type="button"
           onClick={() => {
-            setMobileInspectorOpen(!mobileInspectorOpen);
+            const next = !mobileInspectorOpen;
+            setMobileInspectorOpen(next);
             setMobileConfigOpen(false);
           }}
           aria-expanded={mobileInspectorOpen}
+          aria-controls="mobile-inspector-drawer"
           className="flex items-center gap-1.5 px-3 py-2 rounded-md border text-xs font-medium cursor-pointer min-h-[44px]"
           style={{
             backgroundColor: mobileInspectorOpen ? 'var(--background-secondary)' : 'var(--background)',
@@ -207,25 +346,35 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
           <div
             className="fixed inset-0 bg-black/40 z-30 lg:hidden backdrop-blur-xs"
             onClick={() => {
-              setMobileConfigOpen(false);
-              setMobileInspectorOpen(false);
+              if (mobileConfigOpen) {
+                setMobileConfigOpen(false);
+                mobileConfigBtnRef.current?.focus();
+              }
+              if (mobileInspectorOpen) {
+                setMobileInspectorOpen(false);
+                mobileInspectorBtnRef.current?.focus();
+              }
             }}
           />
         )}
 
         {/* Left Control Panel (Desktop: collapsible 256px, Mobile: off-canvas drawer) */}
         <div
+          id="mobile-config-drawer"
+          ref={mobileConfigDrawerRef}
+          tabIndex={-1}
+          aria-hidden={!desktopSidebarOpen && !mobileConfigOpen}
           className={`
             fixed lg:static top-0 lg:top-auto left-0 bottom-0 lg:bottom-auto z-40
             ${desktopSidebarOpen ? 'lg:w-[256px]' : 'lg:w-0'} shrink-0 transition-all duration-200 overflow-hidden
-            ${mobileConfigOpen ? 'translate-x-0 w-[272px]' : '-translate-x-full lg:translate-x-0'}
+            ${mobileConfigOpen ? 'translate-x-0 w-full max-w-[280px] sm:w-[272px]' : '-translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
             borderRight: desktopSidebarOpen ? '1px solid var(--border)' : 'none',
           }}
         >
-          <div className="w-[256px] h-full">
+          <div className="w-full min-w-0 h-full">
             <Sidebar
               algorithm={algorithm}
               setAlgorithm={setAlgorithm}
@@ -269,7 +418,7 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             )}
           </div>
 
-          {isLoadingWasm && (
+          {isLoadingWasm ? (
             <div
               className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1.5 rounded border text-xs font-mono font-medium shadow-sm"
               style={{
@@ -281,6 +430,15 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
               <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--primary-action)]" />
               <span>Computing in C++ WASM...</span>
             </div>
+          ) : (
+            <CanvasStepBanner
+              snapshot={currentSnapshot}
+              algorithm={algorithm}
+              currentStepIndex={currentStepIndex}
+              totalSteps={totalSteps}
+              onNext={nextStep}
+              onPrev={prevStep}
+            />
           )}
 
           <GraphCanvas
@@ -297,33 +455,64 @@ export const VisualizerPage: React.FC<VisualizerPageProps> = ({
             selectedNodeId={selectedNodeId}
             setSelectedNodeId={setSelectedNodeId}
             theme={theme}
+            desktopSidebarOpen={desktopSidebarOpen}
+            desktopInspectorOpen={desktopInspectorOpen}
           />
         </main>
 
-        {/* Right Inspector (Desktop: collapsible 340px, Mobile: drawer) */}
+        {/* Right Inspector (Desktop: resizable & expandable, Mobile: drawer) */}
         <div
+          id="mobile-inspector-drawer"
+          ref={mobileInspectorDrawerRef}
+          tabIndex={-1}
+          aria-hidden={!desktopInspectorOpen && !mobileInspectorOpen}
           className={`
             fixed lg:static top-0 lg:top-auto right-0 bottom-0 lg:bottom-auto z-40
-            ${desktopInspectorOpen ? 'lg:w-[340px]' : 'lg:w-0'} shrink-0 transition-all duration-200 overflow-hidden
-            ${mobileInspectorOpen ? 'translate-x-0 w-[320px]' : 'translate-x-full lg:translate-x-0'}
+            ${desktopInspectorOpen ? '' : 'lg:w-0'} shrink-0 transition-[width] duration-150 overflow-hidden relative
+            ${mobileInspectorOpen ? 'translate-x-0 w-full max-w-[360px] sm:w-[360px]' : 'translate-x-full lg:translate-x-0'}
           `}
           style={{
             backgroundColor: 'var(--surface)',
             borderLeft: desktopInspectorOpen ? '1px solid var(--border)' : 'none',
+            width: typeof window !== 'undefined' && window.innerWidth >= 1024
+              ? (desktopInspectorOpen ? (isInspectorExpanded ? 580 : inspectorWidth) : 0)
+              : undefined,
           }}
         >
-          <div className="w-[340px] h-full">
+          {/* Desktop Left-Edge Drag Resize Handle */}
+          {desktopInspectorOpen && (
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize step inspector panel width"
+              onMouseDown={handleMouseDownResize}
+              className="hidden lg:block absolute top-0 bottom-0 left-0 w-2.5 -ml-1 hover:w-3 cursor-col-resize z-50 group"
+              title="Drag to resize inspector width"
+            >
+              <div
+                className={`w-1 h-full mx-auto transition-colors rounded-full ${
+                  isResizingInspector
+                    ? 'bg-[var(--primary-action)] opacity-100'
+                    : 'opacity-0 group-hover:opacity-80 bg-[var(--primary-action)]'
+                }`}
+              />
+            </div>
+          )}
+
+          <div className="w-full min-w-0 h-full">
             <InfoPanel
               algorithm={algorithm}
               snapshot={currentSnapshot}
               currentStepIndex={currentStepIndex}
               totalSteps={totalSteps}
+              isExpanded={isInspectorExpanded}
+              onToggleExpand={handleToggleExpandInspector}
             />
           </div>
         </div>
       </div>
 
-      {/* Fixed Playback Dock (72px) */}
+      {/* Fixed Playback Dock */}
       <PlaybackBar
         currentStepIndex={currentStepIndex}
         totalSteps={totalSteps}
